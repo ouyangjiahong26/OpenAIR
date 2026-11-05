@@ -107,6 +107,8 @@ Research suffers from **long cycles, fragmented tooling, untraceable evidence, a
 
 🎬 Full 45-second narrated demo: [watch inline on GitHub](https://github.com/pdl-openair/OpenAIR/blob/main/assets/openair-demo.mp4) · [download mp4](https://github.com/pdl-openair/OpenAIR/releases/download/v1.0.0/openair-demo.mp4) · [play on the project site](https://pdl-openair.github.io/OpenAIR/#demo)
 
+🎬 Full platform walkthrough (~2 min 45 s, Chinese narration — platform tour → crystal materials discovery → PVD process optimization): [watch inline on GitHub](https://github.com/pdl-openair/OpenAIR/blob/main/assets/openair-platform-demo.mp4) · [play on the project site](https://pdl-openair.github.io/OpenAIR/#demo)
+
 <details>
 <summary><b>External accounts needed to reproduce these scenarios</b></summary>
 

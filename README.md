@@ -107,6 +107,8 @@
 
 🎬 完整 45 秒演示视频（含讲解）：[GitHub 页内直接观看](https://github.com/pdl-openair/OpenAIR/blob/main/assets/openair-demo.mp4) · [下载 mp4](https://github.com/pdl-openair/OpenAIR/releases/download/v1.0.0/openair-demo.mp4) · [项目主页在线播放](https://pdl-openair.github.io/OpenAIR/#demo)
 
+🎬 完整平台演示（约 2 分 45 秒，中文配音：平台概览 → 晶体材料发现 → PVD 工艺寻优）：[GitHub 页内直接观看](https://github.com/pdl-openair/OpenAIR/blob/main/assets/openair-platform-demo.mp4) · [项目主页在线播放](https://pdl-openair.github.io/OpenAIR/#demo)
+
 <details>
 <summary><b>复现上述场景所需的外部账号</b></summary>
 
