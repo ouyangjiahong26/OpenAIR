@@ -58,6 +58,25 @@ def test_apply_thinking_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "reasoning_effort" not in out
 
 
+def test_apply_thinking_effort_max(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OPENAIR_RESEARCH_START_PLANNER_LLM_THINKING", "max")
+    payload = {"model": "m", "reasoning_effort": "none"}
+    out = apply_openai_compatible_thinking(payload, "OPENAIR_RESEARCH_START_PLANNER_LLM_THINKING")
+    assert out["thinking"] == {"type": "enabled"}
+    assert out["reasoning_effort"] == "max"
+
+
+@pytest.mark.parametrize("effort", ["minimal", "low", "medium", "high"])
+def test_apply_thinking_effort_levels(
+    monkeypatch: pytest.MonkeyPatch, effort: str
+) -> None:
+    monkeypatch.setenv("OPENAIR_DURABLE_ORCHESTRATE_LLM_THINKING", effort)
+    payload = {"model": "m"}
+    out = apply_openai_compatible_thinking(payload, "OPENAIR_DURABLE_ORCHESTRATE_LLM_THINKING")
+    assert out["thinking"] == {"type": "enabled"}
+    assert out["reasoning_effort"] == effort
+
+
 def test_apply_thinking_unset_leaves_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("OPENAIR_RESEARCH_START_PLANNER_LLM_THINKING", raising=False)
     payload = {"model": "m"}

@@ -178,6 +178,13 @@ def apply_openai_compatible_thinking(
             "thinking": {"type": "disabled"},
             "reasoning_effort": "none",
         }
+    if raw in {"minimal", "low", "medium", "high", "max"}:
+        return {
+            **payload,
+            "thinking": {"type": "enabled"},
+            "reasoning_effort": raw,
+        }
+
     if raw in {"enabled", "on", "1", "true"}:
         out = {**payload, "thinking": {"type": "enabled"}}
         # Do not force a high effort; leave provider/model defaults for enable.
