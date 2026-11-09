@@ -19,9 +19,10 @@ FROM node:20-alpine AS builder
 ENV CI=1 \
     NODE_OPTIONS=--max-old-space-size=4096
 
-# 国产 npm 镜像（淘宝）+ 通过 corepack 锁定 pnpm 版本（与根 package.json 一致）
-RUN npm config set registry https://registry.npmmirror.com && \
-    corepack enable && corepack prepare pnpm@9.15.0 --activate
+# npm 源可被构建参数覆盖；源不可用时回退官方 registry。
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+RUN npm install -g pnpm@9.15.0 --registry "$NPM_REGISTRY" || \
+    npm install -g pnpm@9.15.0 --registry https://registry.npmjs.org
 
 WORKDIR /repo
 
@@ -30,7 +31,9 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set registry "$NPM_REGISTRY" && \
+    (pnpm install --frozen-lockfile || \
+     (pnpm config set registry https://registry.npmjs.org && pnpm install --frozen-lockfile))
 
 # 拷源码：shared 作为 vite alias 源被直接打包；web 是构建目标
 # fixtures 经 vite @fixtures alias 被部分 fixture 数据模块导入，构建期必须存在
