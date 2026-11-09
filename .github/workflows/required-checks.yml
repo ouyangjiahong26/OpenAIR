@@ -308,6 +308,4 @@ jobs:
       - name: Prepare env
         run: cp .env.example .env
       - name: Build compose images
-        run: |
-          docker compose build --progress=plain
-          docker compose --profile build build worker
+        run: docker compose build --progress=plain api web
