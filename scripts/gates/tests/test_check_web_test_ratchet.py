@@ -34,6 +34,19 @@ def _write(tmp_path: Path, name: str, text: str) -> Path:
     return path
 
 
+def _run(tmp_path: Path, report: Path, known: Path) -> int:
+    return ratchet.main(
+        [
+            "--report",
+            str(report),
+            "--known-failures",
+            str(known),
+            "--root",
+            str(tmp_path),
+        ]
+    )
+
+
 def test_new_failure_is_violation(tmp_path: Path, capsys) -> None:
     report = _write(
         tmp_path,
@@ -41,7 +54,7 @@ def test_new_failure_is_violation(tmp_path: Path, capsys) -> None:
         _report(("a.test.ts", "fails", "failed"), ("a.test.ts", "passes", "passed")),
     )
     known = _write(tmp_path, "known.json", _known())
-    code = ratchet.main(["--report", str(report), "--known-failures", str(known), "--root", str(tmp_path)])
+    code = _run(tmp_path, report, known)
     assert code == ratchet.EXIT_VIOLATION
     assert "NEW FAILURE" in capsys.readouterr().err
 
@@ -49,14 +62,14 @@ def test_new_failure_is_violation(tmp_path: Path, capsys) -> None:
 def test_known_failure_passes(tmp_path: Path) -> None:
     report = _write(tmp_path, "report.json", _report(("a.test.ts", "fails", "failed")))
     known = _write(tmp_path, "known.json", _known("a.test.ts::fails"))
-    code = ratchet.main(["--report", str(report), "--known-failures", str(known), "--root", str(tmp_path)])
+    code = _run(tmp_path, report, known)
     assert code == ratchet.EXIT_PASS
 
 
 def test_fixed_known_failure_is_non_blocking(tmp_path: Path) -> None:
     report = _write(tmp_path, "report.json", _report(("a.test.ts", "fails", "passed")))
     known = _write(tmp_path, "known.json", _known("a.test.ts::fails"))
-    code = ratchet.main(["--report", str(report), "--known-failures", str(known), "--root", str(tmp_path)])
+    code = _run(tmp_path, report, known)
     assert code == ratchet.EXIT_PASS
 
 
@@ -79,5 +92,5 @@ def test_absolute_paths_are_normalized(tmp_path: Path) -> None:
         _report((str(tmp_path / "apps" / "web" / "a.test.ts"), "fails", "failed")),
     )
     known = _write(tmp_path, "known.json", _known("apps/web/a.test.ts::fails"))
-    code = ratchet.main(["--report", str(report), "--known-failures", str(known), "--root", str(tmp_path)])
+    code = _run(tmp_path, report, known)
     assert code == ratchet.EXIT_PASS

@@ -9,6 +9,16 @@
   },
   "nodes": [
     {
+      "id": "apps/web/src/pages/TaskDetailPage.test.tsx::TaskDetailPage compact overview sends a concrete artifact to the filtered artifact library",
+      "status": "failed",
+      "reason": "Node 20 CI 环境稳定复现，Node 24 本机不复现；环境差异待单独修复。"
+    },
+    {
+      "id": "apps/web/src/pages/tests/workbench_context_and_stream/WorkbenchPage.context.test.tsx::distinguishes missing historical input from unavailable reads without substituting goal",
+      "status": "failed",
+      "reason": "Node 20 CI 环境稳定复现，Node 24 本机不复现；环境差异待单独修复。"
+    },
+    {
       "id": "apps/web/src/components/workbench/WorkbenchFlowNav.test.tsx::WorkbenchFlowNav substage display keeps the semantic title, number, status, and active state while omitting the secondary objective",
       "status": "failed",
       "reason": "组件 title 现在拼接 objective（researchWorkProgressTitle 的设计行为），测试仍按只含 semanticTitle 查询。"

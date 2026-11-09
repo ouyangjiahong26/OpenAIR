@@ -15,7 +15,8 @@ across local absolute paths and CI checkouts.
 
 Usage:
   python scripts/gates/check_web_test_ratchet.py --report vitest-report.json
-  python scripts/gates/check_web_test_ratchet.py --report r.json --known-failures .github/web-test-known-failures.json
+  python scripts/gates/check_web_test_ratchet.py --report r.json \
+      --known-failures .github/web-test-known-failures.json
 
 Pure Python >= 3.10, standard library only.
 """

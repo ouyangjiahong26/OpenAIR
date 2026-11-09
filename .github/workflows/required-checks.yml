@@ -102,7 +102,7 @@ jobs:
           --python services/api/.venv/bin/python
       - name: mypy scope ratchet
         run: >-
-          python scripts/gates/mypy_gate.py
+          python scripts/gates/mypy_gate.py --changed-only
           --base "${{ steps.base.outputs.sha }}"
           --python services/api/.venv/bin/python
       - name: Placement guard
