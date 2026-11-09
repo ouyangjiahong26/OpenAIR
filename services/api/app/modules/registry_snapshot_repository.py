@@ -1853,8 +1853,27 @@ def validate_envelope(
                 "executionComposition",
                 "executionMethod",
                 "externalActionContract",
+                "canonicalWorkflowMembership",
             },
         )
+        membership = row.get("canonicalWorkflowMembership")
+        if membership is not None:
+            membership = _require_fields(
+                membership,
+                {"workflowIds", "skillPacks"},
+                "SubstageDefinition.canonicalWorkflowMembership",
+            )
+            for list_key in ("workflowIds", "skillPacks"):
+                values = membership[list_key]
+                if (
+                    not isinstance(values, list)
+                    or not values
+                    or any(not isinstance(value, str) or not value for value in values)
+                    or len(set(values)) != len(values)
+                ):
+                    raise RegistrySnapshotIntegrityError(
+                        "SubstageDefinition.canonicalWorkflowMembership is invalid"
+                    )
         _positive_int(row, "definitionVersion", "SubstageDefinition")
         _strict_bool(row, "enabled", "SubstageDefinition")
         if row["pack"] not in pack_ids or row["definitionId"] != f"{row['pack']}:{row['substageKey']}":

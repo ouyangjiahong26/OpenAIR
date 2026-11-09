@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from pvd_bo.dataset import combine_training_observations, load_json, load_verified_base_dataset
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -46,3 +48,28 @@ def test_profile_defined_absolute_transform_preserves_signed_observations() -> N
     )
     assert y[-2:].tolist() == [15.2, 14.1]
     assert summary["project_count"] == 2
+
+
+def test_duplicate_observation_id_is_rejected() -> None:
+    profile, base = _profile_and_base()
+    params = {"power_w": 130, "n2_sccm": 12, "ar_sccm": 27, "time_s": 1500}
+    with pytest.raises(ValueError, match="duplicate observation_id"):
+        combine_training_observations(
+            base,
+            [
+                {"observation_id": "same", "parameters": params, "objective_value": 1},
+                {"observation_id": "same", "parameters": params, "objective_value": 2},
+            ],
+            profile,
+        )
+
+
+def test_parameter_contract_comes_from_profile_not_algorithm_constants() -> None:
+    profile, base = _profile_and_base()
+    bad = {
+        "observation_id": "missing-feature",
+        "parameters": {"power_w": 130, "n2_sccm": 12, "ar_sccm": 27},
+        "objective_value": 10,
+    }
+    with pytest.raises(ValueError, match="parameter mismatch"):
+        combine_training_observations(base, [bad], profile)

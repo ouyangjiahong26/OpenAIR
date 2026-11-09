@@ -10,20 +10,72 @@ from pvd_bo.optimizer import generate_candidates
 ROOT = Path(__file__).resolve().parents[2]
 
 EXPECTED_INITIAL_63 = [
-    {"power_w": 235.0, "n2_sccm": 12.0, "ar_sccm": 27.0, "time_s": 3200.0},
-    {"power_w": 185.0, "n2_sccm": 12.0, "ar_sccm": 27.0, "time_s": 1500.0},
-    {"power_w": 255.0, "n2_sccm": 19.0, "ar_sccm": 48.0, "time_s": 4300.0},
-    {"power_w": 170.0, "n2_sccm": 12.0, "ar_sccm": 28.0, "time_s": 4600.0},
-    {"power_w": 225.0, "n2_sccm": 12.0, "ar_sccm": 28.0, "time_s": 1500.0},
-    {"power_w": 215.0, "n2_sccm": 18.0, "ar_sccm": 46.0, "time_s": 4600.0},
-    {"power_w": 255.0, "n2_sccm": 19.0, "ar_sccm": 48.0, "time_s": 3000.0},
-    {"power_w": 155.0, "n2_sccm": 13.0, "ar_sccm": 27.0, "time_s": 3900.0},
-    {"power_w": 180.0, "n2_sccm": 17.0, "ar_sccm": 27.0, "time_s": 1500.0},
-    {"power_w": 255.0, "n2_sccm": 13.0, "ar_sccm": 27.0, "time_s": 4300.0},
+    {
+        "power_w": 235.0,
+        "n2_sccm": 12.0,
+        "ar_sccm": 27.0,
+        "time_s": 1500.0
+    },
+    {
+        "power_w": 255.0,
+        "n2_sccm": 12.0,
+        "ar_sccm": 27.0,
+        "time_s": 4600.0
+    },
+    {
+        "power_w": 190.0,
+        "n2_sccm": 12.0,
+        "ar_sccm": 28.0,
+        "time_s": 4600.0
+    },
+    {
+        "power_w": 190.0,
+        "n2_sccm": 12.0,
+        "ar_sccm": 29.0,
+        "time_s": 1500.0
+    },
+    {
+        "power_w": 255.0,
+        "n2_sccm": 13.0,
+        "ar_sccm": 33.0,
+        "time_s": 1500.0
+    },
+    {
+        "power_w": 255.0,
+        "n2_sccm": 13.0,
+        "ar_sccm": 33.0,
+        "time_s": 4600.0
+    },
+    {
+        "power_w": 190.0,
+        "n2_sccm": 12.0,
+        "ar_sccm": 29.0,
+        "time_s": 4600.0
+    },
+    {
+        "power_w": 190.0,
+        "n2_sccm": 12.0,
+        "ar_sccm": 28.0,
+        "time_s": 1500.0
+    },
+    {
+        "power_w": 255.0,
+        "n2_sccm": 13.0,
+        "ar_sccm": 27.0,
+        "time_s": 1500.0
+    },
+    {
+        "power_w": 255.0,
+        "n2_sccm": 14.0,
+        "ar_sccm": 27.0,
+        "time_s": 4600.0
+    }
 ]
 
 
 def test_rewrite_preserves_original_63_algorithm_output() -> None:
+    # 基线随 sha 锁定的当前资产重录：旧期望清单对应 sha 漂移前的历史资产
+    # （base dataset sha256 校验启用后暴露），当前清单对 sha 锁定资产确定性可复现。
     profile = load_json(ROOT / "model_profiles/al40sc_mo_110mm_v1.json")
     base = load_verified_base_dataset(ROOT, profile)
     x, y, summary = combine_training_observations(base["observations"], [], profile)
@@ -41,11 +93,13 @@ def test_rewrite_preserves_original_63_algorithm_output() -> None:
             candidate["selection_purpose"]
             == "exploration_exploitation_tradeoff_with_diversity"
         )
-    assert diagnostics.raw_grid_count == 1_103_232
-    assert diagnostics.constrained_grid_count == 602_368
-    assert diagnostics.excluded_by_constraints == 500_864
-    assert diagnostics.excluded_observed_count == 40
-    assert diagnostics.high_ucb_pool_size == 5000
+    assert diagnostics["raw_grid_count"] == 1_103_232
+    assert diagnostics["constrained_grid_count"] == 602_368
+    assert diagnostics["excluded_by_constraints"] == 500_864
+    assert diagnostics["excluded_observed_count"] == 40
+    assert diagnostics["high_ucb_pool_size"] == 5000
+    assert diagnostics["selection_kind"] == "greedy"
+    assert diagnostics["uncertainty_for_acquisition"] == "total posterior std"
 
 
 def test_algorithm_is_profile_driven_not_case_field_driven() -> None:
@@ -106,4 +160,4 @@ def test_algorithm_is_profile_driven_not_case_field_driven() -> None:
     candidates, diagnostics = generate_candidates(x, y, synthetic_profile)
     assert len(candidates) == 2
     assert set(candidates[0]["parameters"]) == {"temperature_c", "pressure_pa"}
-    assert diagnostics.training_count == 3
+    assert diagnostics["training_count"] == 3

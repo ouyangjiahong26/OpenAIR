@@ -75,6 +75,18 @@ MATERIALS_WORKFLOW_SKILL_MAP_PATH = ROOT / "schemas" / "materials" / "candidate-
 MATERIALS_FULL_DISCOVERY_SKILL_MAP_PATH = ROOT / "schemas" / "materials" / "full-discovery-workflow-skill-map.yaml"
 PVD_WORKFLOW_SKILL_MAP_PATH = ROOT / "schemas" / "pvd" / "substage-skill-map.yaml"
 CS_REPRODUCTION_SKILL_MAP_PATH = ROOT / "schemas" / "cs_reproduction" / "substage-skill-map.yaml"
+
+# (pack, skill-map path, workflowId, skillPack) for every canonical Workflow
+# that freezes an ordered required-skill composition onto its Definitions.
+# The membership marker below and the composition attach functions must read
+# the same maps so planning and execution snapshots cannot drift.
+_CANONICAL_WORKFLOW_SKILL_MAPS: tuple[tuple[str, Path, str, str], ...] = (
+    ("opentrajectory", OPENTRAJECTORY_SKILL_MAP_PATH, "opentrajectory_research_workflow", "opentrajectory"),
+    ("materials", MATERIALS_WORKFLOW_SKILL_MAP_PATH, "materials_candidate_discovery_workflow", "materials"),
+    ("materials", MATERIALS_FULL_DISCOVERY_SKILL_MAP_PATH, "materials_full_discovery_workflow", "materials"),
+    ("pvd", PVD_WORKFLOW_SKILL_MAP_PATH, "pvd_process_optimization_workflow", "pvd"),
+    ("cs_reproduction", CS_REPRODUCTION_SKILL_MAP_PATH, "cs_paper_reproduction_workflow", "cs_reproduction"),
+)
 SCHEMA_VERSION = 1
 POLICY_VERSION = "registry-policy.v1"
 
@@ -799,6 +811,39 @@ def _propagate_required_artifact_binding_availability(
                     changed = True
                     break
 
+def _annotate_canonical_workflow_membership(
+    definitions: Mapping[tuple[str, str], dict[str, Any]],
+) -> None:
+    """Mark Definitions whose skill sequence a canonical Workflow freezes.
+
+    Planning snapshots carry no capability I/O (no ``executionComposition``),
+    yet the planner still needs this admission fact: a membership-marked
+    Definition can only start through its admitted Workflow, so freeform
+    planning must not offer it. The marker reads the same skill maps the
+    composition attach functions use, keeping planning and execution views
+    of workflow membership identical.
+    """
+    for pack, path, workflow_id, skill_pack in _CANONICAL_WORKFLOW_SKILL_MAPS:
+        payload = _load_yaml(path)
+        for substage in payload:
+            targets = [
+                row for row in definitions.values()
+                if row["pack"] == pack and row["substageKey"] == str(substage)
+            ]
+            if not targets:
+                raise RegistryAuthorityError(
+                    f"canonical_workflow_membership_unknown:{pack}:{substage}"
+                )
+            for row in targets:
+                membership = row.setdefault(
+                    "canonicalWorkflowMembership", {"workflowIds": [], "skillPacks": []}
+                )
+                if workflow_id not in membership["workflowIds"]:
+                    membership["workflowIds"].append(workflow_id)
+                if skill_pack not in membership["skillPacks"]:
+                    membership["skillPacks"].append(skill_pack)
+
+
 def _attach_opentrajectory_skill_compositions(
     definitions: Mapping[tuple[str, str], dict[str, Any]],
     skills: Mapping[str, dict[str, Any]],
@@ -1180,6 +1225,7 @@ def _registry_static_policies() -> dict[str, Any]:
 def build_planning_registry_snapshot() -> RegistrySnapshot:
     """Freeze research requirements from their canonical source, without capability I/O."""
     packs, definitions = _definition_rows()
+    _annotate_canonical_workflow_membership(definitions)
     return snapshot_from_envelope({
         "schemaVersion": 2,
         "scope": {"kind": "research_planning"},
@@ -1262,6 +1308,10 @@ def build_execution_registry_snapshot(
             for key, value in present.items()
             if key != "executionComposition"
         }
+        if "canonicalWorkflowMembership" not in row:
+            # Historical planning snapshots predate the membership marker; the
+            # current registry must stay comparable against them.
+            research_contract.pop("canonicalWorkflowMembership", None)
         if canonicalize_registry_value(research_contract) != row:
             continue
         compatible.add(identity)
@@ -1331,13 +1381,14 @@ def build_execution_registry_snapshot(
 
 def _build_registry_envelope(
     *, consistencyAudit: Mapping[str, Any] | None = None,
-) -> dict[str, Any]:
+) -> dict:
     # Audit material can reject a known conflict, but it never contributes
     # identity, bindings, policy, serialization, or the content hash.
     if consistencyAudit and any(value == "canonical_conflict" for value in consistencyAudit.values()):
         raise RegistryAuthorityError("consistency_audit_conflict")
     packs, definitions = _definition_rows()
     skill_definitions, skill_bindings, skill_by_id = _skill_rows(definitions)
+    _annotate_canonical_workflow_membership(definitions)
     _attach_opentrajectory_skill_compositions(definitions, skill_by_id, skill_bindings)
     _attach_materials_workflow_skill_compositions(definitions, skill_by_id, skill_bindings)
     _attach_materials_full_discovery_workflow_skill_compositions(definitions, skill_by_id, skill_bindings)

@@ -34,6 +34,7 @@
 
 ## 🗞️ News
 
+- **2026-11-09**　🔬 **PVD 确定性链新增「贝叶斯模型推荐候选参数」节点**：每轮以同体系基线数据与真实实验反馈现场训练高斯过程代理模型，分层推荐候选工艺参数，工作台提供候选表与分层意图可视化；自由输入（不带 @workflow）的规划与直达回答链路同步加固
 - **2026-10-31**　🏁 **v1.0.0 首个稳定版发布**：四阶段科研编排运行时、200+ 契约化科研 skill、双执行模式（live / replay 零密钥回放）、证据链全程可追溯、多用户与配额、Docker 一键部署与 [openair-cli](https://pypi.org/project/openair-cli/)。[Release Notes](https://github.com/pdl-openair/OpenAIR/releases/tag/v1.0.0)
 - **2026-10-31**　🧰 [openair-cli 0.2.0](https://pypi.org/project/openair-cli/)：Docker 构建进度实时透传、环境配置引导向导（`openair config`）、环境体检（`openair doctor`）、日志跟踪（`openair logs`）
 - **2026-10-29**　🚀 v0.1.0 首个公开版本发布：四阶段编排运行时、200+ 科研 skill、评测与回放资产、双执行模式（live / replay）。[Release Notes](https://github.com/pdl-openair/OpenAIR/releases/tag/v0.1.0)
@@ -114,10 +115,10 @@
 
 | 能力 | 环境变量 | 说明 |
 |---|---|---|
-| 模型网关（Skill 执行 + 开题规划） | `ANTHROPIC_*` / `LLM_PROVIDER_*` | 任意 Anthropic / OpenAI 兼容网关 |
+| 模型网关（Skill 执行 + 开题规划） | `LLM_PROVIDER_*`（一套通吃） | 任意 OpenAI / Anthropic 兼容网关；compose 部署下容器内 Skill 网关自动回退到 `LLM_PROVIDER_*`，规划器与 Skill 用同一套即可 |
 | Materials Project | `MP_API_KEY` | **免费申请**：https://next-gen.materialsproject.org/api |
 | 材料 MCP 服务 | `MATERIALS_MCP_BASE_URL` | 自建或对接现有 MCP 端点 |
-| 超算 DFT（VASP） | `JCC_*` | 有超算账号时配置 |
+| 超算 DFT（VASP） | `JCC_*` | 有超算账号时配置（账号变量会同时传给 api 与 durable-worker） |
 | 云实验平台 | `FLUX_BASE_URL` / `FLUX_API_KEY` | 需机构 VPN 与平台账号 |
 
 不配置以上账号时：平台本身（登录、建任务、看板、产物库）与 replay 回放完全可用，涉及外部数据/算力的节点会如实报告 `partial_failure`。
@@ -260,11 +261,12 @@ export UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple   # PyPI 源（
 |---|---|---|
 | 执行模式 | `SKILL_EXEC_MODE=live \| replay` | 默认 `live`；`replay` 零密钥体验全流程 |
 | 演示数据 | `OPENAIR_DEV_SEED_FIXTURES=1` | 新手体验建议开；日常保持 0 |
-| Skill/Agent 网关 | `ANTHROPIC_BASE_URL`、`ANTHROPIC_API_KEY`、`OPENAIR_CLAUDE_MODEL` | `live` 模式必填；任意 Anthropic 兼容网关 |
+| Skill/Agent 网关 | `LLM_PROVIDER_BASE_URL`、`LLM_PROVIDER_API_KEY`、`OPENAIR_CLAUDE_MODEL` | `live` 模式必填；compose 下容器内 `ANTHROPIC_*` 自动回退到 `LLM_PROVIDER_*`，填同一套即可。需分离网关时用 `OPENAIR_ANTHROPIC_*` 覆盖（`.env` 直填 `ANTHROPIC_*` 不会进容器） |
 | 规划器（开题/出方案） | `LLM_PROVIDER_BASE_URL`、`LLM_PROVIDER_API_KEY`、`LLM_PROVIDER_MODEL` | `live` 模式必填；OpenAI 兼容端点（勿填 `…/api/anthropic` 路径，会 404） |
 | 文献检索 | `OT_DEEPXIV_TOKEN`、`SEMANTIC_SCHOLAR_API_KEY` | 用到文献类 skill 才填 |
 | 材料 MCP | `MATERIALS_MCP_BASE_URL`、`MP_API_KEY` | 晶体设计链 live 执行时填 |
-| 超算（JCC） | `JCC_BASE_URL / JCC_USERNAME / JCC_PASSWORD / JCC_CLUSTER_NAME / JCC_CLI_PATH` | 接入超算才填；`jcc` CLI 不随仓库分发，自行安装后经 `JCC_CLI_PATH` 指向 |
+| 超算（JCC） | `JCC_BASE_URL / JCC_USERNAME / JCC_PASSWORD / JCC_CLUSTER_NAME / JCC_CLI_PATH` | 接入超算才填（已同时传给 api 与 durable-worker）。`jcc` CLI 不随仓库分发：安装 Linux 版后经 `JCC_CLI_PATH` 指向，或挂到容器 PATH（如 `/usr/local/bin/jcc`） |
+| 赝势库（VASP） | `VASP_PSP_DIR` | 跑 DFT 稳定性验证需要；填 durable-worker 容器内真实路径（先把宿主机 POTCAR 目录挂载进容器）；缺失时尝试经 jcc vaspkit 生成 |
 | 云实验平台 | `FLUX_BASE_URL`、`FLUX_API_KEY` | 需机构 VPN 与平台账号；不配置时资源广场自动展示本地演示快照 |
 
 </details>

@@ -166,7 +166,13 @@ Scientific rules:
 - design research work around the user's actual question using the four-stage framework: problem
 modeling, solution design, execution and validation, and insight generation;
 - first select suitable workTypeChoice values from availableResearchWorkTypes; then write the plan
-from the user's Query. The server keeps only choices that map to registered research work;
+  from the user's Query. The server keeps only choices that map to registered research work;
+- for questions that ask for an explanation, definition, comparison, or a direct answer and need
+  no materials, code, or experiments, select the direct-answer/conclusion work type that answers
+  the main question itself — not evidence-synthesis or execution work that presupposes upstream
+  experiment results;
+- select execution-and-validation work only when the request actually requires running code,
+  experiments, or computations, and the user can provide the runnable materials;
 - use as many or as few independent work items as the request needs. Do not manufacture a fixed
 number of tasks per stage;
 - treat goals, questions, outputs, risks, unknowns, constraints, and dependencies as useful planning
@@ -319,7 +325,11 @@ def assemble_freeform_semantic_proposal(
                 "localKey": local_key,
                 "objective": objective,
                 "definitionId": str(definition["definitionId"]),
-                "inputRefs": [],
+                # Mirrors the adaptive-workflow assembly: the task's research
+                # goal is always an authorized memory input. Without it, agent
+                # candidates cannot resolve the frozen ``user_goal`` input and
+                # the selection fails closed with input_contract_invalid.
+                "inputRefs": ["research_goal"],
                 "expectedArtifactTypes": [],
                 "targetOutputRefs": [
                     target_outputs[output_numbers[number] - 1]

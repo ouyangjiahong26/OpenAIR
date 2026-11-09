@@ -12,6 +12,14 @@ def test_needs_input_is_reserved_for_explicit_user_owned_reasons() -> None:
     assert needs_user_input("active_design_not_confirmed") is True
 
 
+def test_unsatisfied_frozen_skill_input_contract_is_user_owned() -> None:
+    # The confirmed design bound a step to a skill whose frozen input contract
+    # needs caller-designated inputs (e.g. exploratory_run executable/argv).
+    # Only the user can revise the design or designate them.
+    assert needs_user_input("input_contract_invalid") is True
+    assert runtime_blocker_status("input_contract_invalid") == "needs_input"
+
+
 def test_ambiguous_and_system_reasons_default_to_system_recovery() -> None:
     for reason in (
         "external_result_unknown",

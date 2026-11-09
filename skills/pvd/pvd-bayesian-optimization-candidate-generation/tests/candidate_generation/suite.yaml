@@ -1,8 +1,10 @@
 suite_id: component.skill.pvd.bayesian-optimization-candidate-generation
 protected_outcome: >-
   PVD BO reads canonical observations and preserves deterministic
-  profile-driven optimization/output behavior without scientific-content
-  eligibility or data-value validation gates.
+  profile-driven optimization/output behavior. Same-system applicability is
+  gated (R0 trains on the frozen sha-locked base dataset; cross-system or
+  unresolved systems report not_applicable), and observation integrity
+  (duplicate ids, parameter contract, base-dataset sha256) fails closed.
 authority_refs:
   - docs/01_核心设计/研究执行与能力/OpenAIR Agent 与 Skill 能力体系.md
   - spec/testing/OpenAIR 测试设计合同.md

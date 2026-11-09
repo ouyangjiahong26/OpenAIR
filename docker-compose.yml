@@ -187,14 +187,17 @@ services:
       FLUX_BASE_URL: ${FLUX_BASE_URL:-}
       FLUX_API_KEY: ${FLUX_API_KEY:-}
       FLUX_TIMEOUT: ${FLUX_TIMEOUT:-}
+      JCC_BASE_URL: ${JCC_BASE_URL:-}
       JCC_USERNAME: ${JCC_USERNAME:-}
       JCC_PASSWORD: ${JCC_PASSWORD:-}
+      JCC_CLUSTER_NAME: ${JCC_CLUSTER_NAME:-}
       # 容器内 JCC 采集暂不可用（2026-10-18 实测）：默认路径的 jcc.exe 是 Windows PE
       # （Linux exec 报 ENOENT，秒败无网络调用）；/usr/local/bin/jcc 是旧版 Linux CLI
       # （子命令 train ≠ 新版 aitrain，17 项查询全灭）。待平台出同版本 Linux 构建后
       # 用 JCC_CLI_PATH 指过去即可启用；期间容器内走 seed 快照兜底 + 失败退避。
       JCC_CLI_PATH: ${JCC_CLI_PATH:-}
       JCC_INVENTORY_TTL_SECONDS: ${JCC_INVENTORY_TTL_SECONDS:-}
+      VASP_PSP_DIR: ${VASP_PSP_DIR:-}
       # --- CORS ---
       OPENAIR_CORS_ORIGINS: ${OPENAIR_CORS_ORIGINS:-}
       # --- Logging ---
@@ -304,6 +307,19 @@ services:
       DEEPXIV_API_KEY: ${DEEPXIV_API_KEY:-}
       SEMANTIC_SCHOLAR_API_KEY: ${SEMANTIC_SCHOLAR_API_KEY:-}
       UNPAYWALL_EMAIL: ${UNPAYWALL_EMAIL:-}
+      # --- 材料链外部凭据（2026-10-31 实测报告 P0：durable-worker 是材料 skill
+      # 脚本的实际执行体，此前只有 api 拿到这些变量，worker 内为空导致
+      # jcc_login_failed）。flux（湿实验）与 VASP 赝势目录同理。 ---
+      FLUX_BASE_URL: ${FLUX_BASE_URL:-}
+      FLUX_API_KEY: ${FLUX_API_KEY:-}
+      FLUX_TIMEOUT: ${FLUX_TIMEOUT:-}
+      JCC_BASE_URL: ${JCC_BASE_URL:-}
+      JCC_USERNAME: ${JCC_USERNAME:-}
+      JCC_PASSWORD: ${JCC_PASSWORD:-}
+      JCC_CLUSTER_NAME: ${JCC_CLUSTER_NAME:-}
+      JCC_CLI_PATH: ${JCC_CLI_PATH:-}
+      JCC_INVENTORY_TTL_SECONDS: ${JCC_INVENTORY_TTL_SECONDS:-}
+      VASP_PSP_DIR: ${VASP_PSP_DIR:-}
       OPENAIR_LOG_LEVEL: INFO
       OPENAIR_LOG_FORMAT: json
       # Claim loop talks to the API service over the compose network.

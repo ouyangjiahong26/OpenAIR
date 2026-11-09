@@ -255,6 +255,7 @@ const SUB_STAGE_LABELS_ZH: Record<string, string> = {
   validation_plan_generation: "最小验证方案生成",
   // Remaining formal work types from all registered skill packs.
   band_gap_calculation: "DFT 带隙计算",
+  bo_candidate_generation: "贝叶斯模型推荐候选参数",
   candidate_discovery: "候选发现",
   candidate_generation: "候选生成",
   characterization: "物相表征",
@@ -375,6 +376,7 @@ const SUB_STAGE_LABELS_EN: Record<string, string> = {
   next_research_recommendation: "Next Research Recommendation",
   validation_plan_generation: "Minimal Validation Plan Generation",
   // Remaining formal work types from all registered skill packs.
+  bo_candidate_generation: "Bayesian Model Candidate Parameter Recommendation",
   candidate_discovery: "Candidate Discovery",
   candidate_generation: "Candidate Generation",
   characterization: "Characterization",
@@ -472,7 +474,7 @@ export const RESEARCH_ARTIFACT_LABELS_ZH: Record<string, string> = {
   pvd_round_experiment_plan_parameter_recommendation: "本轮实验方案与参数推荐",
   pvd_recommendation_mode_resolution: "参数推荐依据与方式",
   pvd_candidate_scoring_context_assembly: "候选文献评估依据",
-  pvd_bayesian_optimization_candidate_generation: "下一轮候选实验方案",
+  pvd_bayesian_optimization_candidate_generation: "贝叶斯模型推荐候选参数",
   problem_framing_generation: "研究问题与边界",
   retrieval_matrix_generation: "证据检索计划",
   evidence_schema_design: "证据模型",

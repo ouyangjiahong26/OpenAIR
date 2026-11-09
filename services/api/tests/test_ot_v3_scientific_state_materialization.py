@@ -639,6 +639,23 @@ def test_ot_v3_projection_is_fail_closed_outside_exact_authority(mutation: str) 
     assert result["scientificStates"] == []
 
 
+def test_freeform_general_agent_conclusion_result_also_projects() -> None:
+    # Freeform designs carry no workflowProvenanceRef; the same conclusion
+    # responsibilities stay the direct-answer path for freeform Q&A plans.
+    payload = _materializer_payload("opentrajectory:current_research_conclusion")
+    payload["researchDesignVersions"][0]["workflowProvenanceRef"] = None
+
+    result = materialize_ot_v3_general_agent_result(
+        task_payload=payload,
+        result_id="result:ot-v3",
+        validated_artifact_content=json.dumps(_general_artifact("judgment")),
+        occurred_at=NOW,
+    )
+
+    facts = result["scientificStates"][-1]["scientificFacts"]
+    assert "ot_v3_current_research_conclusion" in facts
+
+
 def test_reprocessing_same_ot_v3_result_is_idempotent() -> None:
     payload = _materializer_payload(
         "opentrajectory:key_unknowns_candidate_explanations"

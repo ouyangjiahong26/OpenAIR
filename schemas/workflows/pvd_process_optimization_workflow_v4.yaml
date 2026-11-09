@@ -1,0 +1,87 @@
+schemaVersion: workflow-definition.v2
+workflowId: pvd_process_optimization_workflow
+workflowVersion: 4
+nameZh: PVD 工艺优化研究
+nameEn: PVD Process Optimization Research
+description: 固定 PVD 下一轮实验决策所需的专业研究职责；核心职责形成候选方向→贝叶斯模型推荐候选参数→可行性核验→本轮推荐决策链。贝叶斯模型推荐候选参数是确定性节点：首轮以历史基线数据集现场训练高斯过程代理模型出候选，反馈轮叠加同体系真实实验观测重新训练再推荐；实验体系与模型不符时如实记录为不适用，不阻塞下游。两项条件职责仅在对应判断需要时进入。
+skillPack: pvd
+planningPolicy:
+  responsibilityPlanning: project_adaptive
+  existingResultReuse: validated_existing_results
+  conditionalResponsibilities: planner_selected
+nodes:
+- nodeKey: evidence_applicability_comparability_analysis
+  definitionId: pvd:evidence_applicability_comparability_analysis
+  definitionVersion: 1
+  requirement: optional
+  displayOrder: 10
+- nodeKey: experimental_feedback_round_analysis
+  definitionId: pvd:experimental_feedback_round_analysis
+  definitionVersion: 1
+  requirement: optional
+  displayOrder: 20
+- nodeKey: process_factor_candidate_experiment_analysis
+  definitionId: pvd:process_factor_candidate_experiment_analysis
+  definitionVersion: 1
+  requirement: required
+  displayOrder: 30
+- nodeKey: bo_candidate_generation
+  definitionId: pvd:bo_candidate_generation
+  definitionVersion: 1
+  requirement: required
+  displayOrder: 35
+- nodeKey: parameter_experiment_plan_feasibility_validation
+  definitionId: pvd:parameter_experiment_plan_feasibility_validation
+  definitionVersion: 1
+  requirement: required
+  displayOrder: 40
+- nodeKey: round_experiment_plan_parameter_recommendation
+  definitionId: pvd:round_experiment_plan_parameter_recommendation
+  definitionVersion: 1
+  requirement: required
+  displayOrder: 50
+supportingWork:
+- supportKey: pvd_project_context
+  definitionId: pvd:research_goal_equipment_constraints
+  definitionVersion: 1
+  supportsNodeKey: evidence_applicability_comparability_analysis
+  dependsOnSupportKeys: []
+  displayOrder: 10
+- supportKey: evidence_acquisition_design
+  definitionId: pvd:research_retrieval_experiment_design
+  definitionVersion: 1
+  supportsNodeKey: evidence_applicability_comparability_analysis
+  dependsOnSupportKeys:
+  - pvd_project_context
+  displayOrder: 20
+- supportKey: literature_evidence_closure
+  definitionId: pvd:literature_experiment_record_verification
+  definitionVersion: 1
+  supportsNodeKey: evidence_applicability_comparability_analysis
+  dependsOnSupportKeys:
+  - evidence_acquisition_design
+  displayOrder: 30
+dependencies:
+- upstreamNodeKey: evidence_applicability_comparability_analysis
+  downstreamNodeKey: process_factor_candidate_experiment_analysis
+  dependencyType: optional_enhancement
+- upstreamNodeKey: experimental_feedback_round_analysis
+  downstreamNodeKey: process_factor_candidate_experiment_analysis
+  dependencyType: optional_enhancement
+- upstreamNodeKey: process_factor_candidate_experiment_analysis
+  downstreamNodeKey: bo_candidate_generation
+  dependencyType: scientific_dependency
+- upstreamNodeKey: bo_candidate_generation
+  downstreamNodeKey: parameter_experiment_plan_feasibility_validation
+  dependencyType: scientific_dependency
+- upstreamNodeKey: parameter_experiment_plan_feasibility_validation
+  downstreamNodeKey: round_experiment_plan_parameter_recommendation
+  dependencyType: scientific_dependency
+boundaryPolicy:
+  allowedExternalActions:
+  - external_read
+  - external_compute
+  confirmationRequiredActions: []
+  prohibitedActions:
+  - external_write
+  - physical_action

@@ -679,6 +679,20 @@ bindings:
       source:
         kind: executionIdentity
         field: task_id
+- bindingId: bind:pvd:bo_candidate_generation:skill:pvd_bayesian_optimization_candidate_generation
+  bindingVersion: 1
+  definitionId: pvd:bo_candidate_generation
+  definitionVersion: 1
+  inputSources:
+    contractVersion: 2
+    fields:
+    - source:
+        kind: scientificState
+        field: $
+      sourcePresence: required
+      targetField: scientific_state_facts
+  skillDefinitionVersion: 1
+  skillId: pvd_bayesian_optimization_candidate_generation
 - bindingId: bind:pvd:research_goal_equipment_constraints:skill:pvd_research_request_understanding
   bindingVersion: 1
   definitionId: pvd:research_goal_equipment_constraints
@@ -998,6 +1012,14 @@ bindings:
       source:
         kind: artifact
         bindingId: bind:pvd:process_factor_candidate_experiment_analysis:skill:pvd_process_factor_candidate_experiment_analysis
+        bindingVersion: 1
+        field: $
+    - defaultValue: null
+      targetField: candidate_exploration
+      sourcePresence: optional
+      source:
+        kind: artifact
+        bindingId: bind:pvd:bo_candidate_generation:skill:pvd_bayesian_optimization_candidate_generation
         bindingVersion: 1
         field: $
 - bindingId: bind:pvd:round_experiment_plan_parameter_recommendation:skill:pvd_round_experiment_plan_parameter_recommendation

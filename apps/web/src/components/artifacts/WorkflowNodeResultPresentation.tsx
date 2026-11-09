@@ -16,6 +16,7 @@ import {
   PvdFeasibilityValidationPresentation,
 } from "./PvdDirectionFeasibilityPresentation";
 import { PvdFeedbackAnalysisPresentation } from "./PvdFeedbackAnalysisPresentation";
+import { PvdBoRecommendationPresentation } from "./PvdBoRecommendationPresentation";
 
 import {
   hasScientificResultContent,
@@ -32,6 +33,7 @@ export type WorkflowNodeResultPresentationKind =
   | "ot_current_research_conclusion"
   | "ot_key_unknowns"
   | "ot_next_research_recommendation"
+  | "pvd_bo_recommendation"
   | "pvd_candidate_direction"
   | "pvd_feasibility_validation"
   | "pvd_feedback_analysis"
@@ -48,6 +50,8 @@ const ARTIFACT_KIND: Record<string, WorkflowNodeResultPresentationKind> = {
   current_research_conclusion: "ot_current_research_conclusion",
   key_unknowns_and_candidate_explanations: "ot_key_unknowns",
   next_research_recommendation: "ot_next_research_recommendation",
+  bo_candidates: "pvd_bo_recommendation",
+  bo_candidate_generation: "pvd_bo_recommendation",
   candidate_analysis: "pvd_candidate_direction",
   process_factor_candidate_experiment_analysis: "pvd_candidate_direction",
   feasibility_validation: "pvd_feasibility_validation",
@@ -64,6 +68,7 @@ const SUBSTAGE_KIND: Record<string, WorkflowNodeResultPresentationKind> = {
   key_unknowns_candidate_explanations: "ot_key_unknowns",
   next_research_recommendation: "ot_next_research_recommendation",
   process_factor_candidate_experiment_analysis: "pvd_candidate_direction",
+  bo_candidate_generation: "pvd_bo_recommendation",
   parameter_experiment_plan_feasibility_validation:
     "pvd_feasibility_validation",
   round_experiment_plan_parameter_recommendation: "pvd_round_recommendation",
@@ -495,6 +500,8 @@ function WorkflowNodeResultBody({
   kind: WorkflowNodeResultPresentationKind;
   document: JsonObject;
 }): ReactNode {
+  if (kind === "pvd_bo_recommendation")
+    return <PvdBoRecommendationPresentation document={document} />;
   if (kind === "cs_actual_metric_records")
     return <CsActualMetricRecordsPresentation document={document} />;
   if (kind === "cs_reproduction_comparison_judgment")

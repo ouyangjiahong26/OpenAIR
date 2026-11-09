@@ -492,7 +492,11 @@ export default function HomePage() {
     if (selectedWorkflow && mentionWorkflowLabelRef.current) {
       mentionWorkflowLabelRef.current = selectedWorkflow.label;
       setResearchPath(selectedWorkflow.researchPath);
-    } else if (!selectedWorkflow && mentionWorkflowLabelRef.current) {
+    } else if (!selectedWorkflow) {
+      // The @mention in the text is the only durable workflow signal. Once it
+      // is gone the path must return to standard even if the tab state went
+      // stale (e.g. a mention-select that bailed early), otherwise a plain
+      // free-text question would be submitted with a requested workflow.
       mentionWorkflowLabelRef.current = null;
       setResearchPath("standard");
     }
@@ -531,19 +535,28 @@ export default function HomePage() {
       return;
     }
 
+    // requestedWorkflow must mirror the user's explicit @mention in the text,
+    // never a possibly-stale tab state: the backend treats it as an explicit
+    // Workflow selection and would plan a deterministic chain for free text.
+    const mentionedWorkflow = HOME_WORKFLOW_MENTIONS
+      .find(option => cleanedGoal.includes(`@${option.label}`));
+    const requestedWorkflow =
+      mentionedWorkflow?.researchPath === "pvd_parameter_recommendation"
+        ? "pvd_process_optimization_workflow" as const
+        : mentionedWorkflow?.researchPath === "evidence_analysis"
+          ? "opentrajectory_research_workflow" as const
+          : mentionedWorkflow?.researchPath === "materials_discovery"
+            ? "materials_full_discovery_workflow" as const
+            : mentionedWorkflow?.researchPath === "cs_reproduction"
+                || cleanedGoal.startsWith(CS_REPRODUCTION_MENTION)
+              ? "cs_paper_reproduction_workflow" as const
+              : undefined;
+
     const startInput = {
       input: cleanedGoal,
       sourcePage: "home" as const,
       presetQuery: searchParams.get("query") ?? undefined,
-      requestedWorkflow: researchPath === "pvd_parameter_recommendation"
-        ? "pvd_process_optimization_workflow" as const
-        : researchPath === "evidence_analysis"
-          ? "opentrajectory_research_workflow" as const
-          : researchPath === "materials_discovery"
-            ? "materials_full_discovery_workflow" as const
-            : researchPath === "cs_reproduction" || cleanedGoal.startsWith(CS_REPRODUCTION_MENTION)
-              ? "cs_paper_reproduction_workflow" as const
-              : undefined,
+      requestedWorkflow,
       executionMode,
       createClarificationDraft: true,
     };

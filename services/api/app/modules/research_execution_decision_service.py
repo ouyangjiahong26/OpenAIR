@@ -188,6 +188,11 @@ DURABLE_START_BLOCKER_CODES = frozenset(
         "canonical_skill_composition_not_frozen",
         "canonical_skill_composition_unavailable",
         "execution_selection_invocation_context_unsatisfied",
+        # USER-owned start blocker (needs_user_input): an unsatisfied frozen
+        # skill input contract must persist as needs_input for the user to
+        # revise the design or designate the missing inputs, not escape as a
+        # raw job failure or a dead-end SYSTEM block.
+        "input_contract_invalid",
     }
 )
 

@@ -9,5 +9,6 @@ four_parameter_recommendation: 04-insight/round-parameter-recommendation.md
 evidence_applicability_comparability_analysis: 03-validation/evidence-applicability-comparability-analysis.md
 experimental_feedback_round_analysis: 03-validation/experimental-feedback-round-analysis.md
 process_factor_candidate_experiment_analysis: 03-validation/process-factor-candidate-experiment-analysis.md
+bo_candidate_generation: 03-validation/bo-candidate-generation.md
 parameter_experiment_plan_feasibility_validation: 03-validation/parameter-experiment-plan-feasibility-validation.md
 round_experiment_plan_parameter_recommendation: 04-insight/round-experiment-plan-parameter-recommendation.md

@@ -1,9 +1,11 @@
 """Narrow deterministic ScientificState projection for OT v3/v4 agent results.
 
 The general research agent has one broad artifact contract.  Only the three
-frozen OpenTrajectory v3 responsibilities below are accepted here.  The
-validated artifact is copied without semantic interpretation and the existing
-ScientificState authority owns current-design selection and snapshot append.
+frozen OpenTrajectory v3 responsibilities below are accepted here (for OT v3/v4
+Workflow designs and, with identical guards, for provenance-free freeform
+designs).  The validated artifact is copied without semantic interpretation and
+the existing ScientificState authority owns current-design selection and
+snapshot append.
 """
 
 from __future__ import annotations
@@ -70,6 +72,12 @@ def materialize_ot_v3_general_agent_result(
     Ineligible workflow, substage, contract, failed Result, and superseded
     ResearchDesign inputs are intentionally no-ops.  This keeps the hook safe
     for every production Result while opening no global general-agent path.
+
+    Freeform designs (no ``workflowProvenanceRef``) are accepted for the same
+    three conclusion responsibilities: they are the platform's direct-answer
+    substages, executed by the general research agent under the identical
+    artifact/validator guards, so a freeform Q&A plan can surface its answer
+    in the ScientificState the same way the OT workflow does.
     """
 
     payload = deepcopy(dict(task_payload))
@@ -109,7 +117,7 @@ def materialize_ot_v3_general_agent_result(
         value=design_version,
     )
     provenance = design.get("workflowProvenanceRef") if design is not None else None
-    if not (
+    if provenance is not None and not (
         isinstance(provenance, Mapping)
         and provenance.get("workflowId") == _OT_V3_WORKFLOW_ID
         and provenance.get("workflowVersion") in _OT_SUPPORTED_WORKFLOW_VERSIONS

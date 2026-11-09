@@ -16,6 +16,9 @@ definitions:
   - substageKey: process_factor_candidate_direction_analysis
     definitionVersion: 1
     requiredExternalActions: []
+  - substageKey: bo_candidate_generation
+    definitionVersion: 1
+    requiredExternalActions: []
   - substageKey: parameter_feasibility_experiment_plan_validation
     definitionVersion: 1
     requiredExternalActions: []

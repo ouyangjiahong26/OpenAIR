@@ -7,25 +7,62 @@ from app.modules.production_definition_source import ProductionDefinitionSource
 from app.modules.registry_snapshot_repository import InMemoryRegistrySnapshotRepository
 
 
-def test_freeform_research_design_catalog_keeps_specialized_work_available_with_formal_scope() -> None:
+def test_freeform_catalog_keeps_non_composition_specialized_work_with_formal_scope() -> None:
     source = ProductionDefinitionSource(archive=InMemoryRegistrySnapshotRepository())
 
     catalog = source.planner_catalog_for_research_design(None)
-    pvd_row = next(
-        row for row in catalog if row["definitionId"] == "pvd:research_goal_equipment_constraints"
-    )
+    definition_ids = {row["definitionId"] for row in catalog}
+    # ope carries no canonical-Workflow composition: its Definitions keep the
+    # normal Registry candidate-selection path and stay offerable to freeform.
     ope_row = next(
         row for row in catalog if row["definitionId"] == "ope:experiment_design"
     )
-
-    assert pvd_row["planningApplicability"]["scopeKind"] == "specialized"
-    assert "PVD" in pvd_row["planningApplicability"]["scopeLabel"]
-    assert pvd_row["planningApplicability"]["whenToUse"]
     assert ope_row["planningApplicability"]["scopeKind"] == "specialized"
+    assert "OPE" in ope_row["planningApplicability"]["scopeLabel"]
     assert source.definition_is_eligible_for_workflow_admission(
-        "pvd:research_goal_equipment_constraints",
+        "ope:experiment_design",
         None,
     ) is True
+
+
+def test_freeform_catalog_drops_canonical_workflow_composition_definitions() -> None:
+    source = ProductionDefinitionSource(archive=InMemoryRegistrySnapshotRepository())
+
+    catalog = source.planner_catalog_for_research_design(None)
+    definition_ids = {row["definitionId"] for row in catalog}
+
+    # Composition-bound Definitions (opentrajectory / cs_reproduction / materials /
+    # pvd workflow nodes) can only start through their admitted Workflow: a
+    # freeform Task carries no admission and would block at start with
+    # canonical_workflow_lineage_mismatch. The planner must not offer them.
+    for definition_id in (
+        "opentrajectory:problem_framing",
+        "cs_reproduction:reproduction_input_structuring",
+        "materials:candidate_generation",
+        "pvd:research_goal_equipment_constraints",
+    ):
+        assert definition_id not in definition_ids
+        # They remain resolvable for Workflow-admitted tasks and revisions.
+        assert source.resolve(definition_id) is not None
+
+
+def test_planning_snapshot_freeform_catalog_uses_membership_marker() -> None:
+    # The production freeform planning path builds a planning-only snapshot
+    # (no capability I/O, hence no executionComposition). The membership
+    # marker must carry the same exclusion there.
+    source = ProductionDefinitionSource(
+        archive=InMemoryRegistrySnapshotRepository(), planning_only=True
+    )
+
+    catalog = source.planner_catalog_for_research_design(None)
+    definition_ids = {row["definitionId"] for row in catalog}
+
+    assert "opentrajectory:problem_framing" not in definition_ids
+    assert "pvd:research_goal_equipment_constraints" not in definition_ids
+    # Enabled, non-composition Definitions stay offerable in every snapshot kind.
+    assert "sdr:findings_synthesis" in definition_ids
+    assert "ope:experiment_design" in definition_ids
+    assert "opentrajectory:mechanism_explanation" in definition_ids
 
 
 def test_production_definition_source_can_reopen_the_task_frozen_snapshot_without_creating_a_new_one() -> None:

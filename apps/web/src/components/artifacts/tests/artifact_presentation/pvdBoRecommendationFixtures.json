@@ -1,0 +1,310 @@
+{
+  "generated": {
+    "state": "succeeded",
+    "candidate_generation_status": "generated",
+    "applicability": {
+      "status": "eligible",
+      "profile_id": "al40sc_mo_110mm_v2",
+      "profile_version": 2,
+      "issues": []
+    },
+    "objective": {
+      "target_metric": "d33",
+      "transform": "absolute_value",
+      "direction": "maximize"
+    },
+    "candidates": [
+      {
+        "candidate_rank": 1,
+        "predicted_target": 15.94516812066428,
+        "predictive_std": 4.150712060189325,
+        "predictive_std_latent": 2.2475432439903367,
+        "acquisition_score": 18.192711364654617,
+        "selection_purpose": "高值主峰探索",
+        "selection_role": "高值主峰探索",
+        "parameters": {
+          "power": 255.0,
+          "n2_flow": 12.0,
+          "ar_flow": 27.0,
+          "deposition_time": 1500.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 2,
+        "predicted_target": 15.912885001043415,
+        "predictive_std": 3.8668693548382853,
+        "predictive_std_latent": 1.6660488091268375,
+        "acquisition_score": 17.578933810170252,
+        "selection_purpose": "高值主峰探索",
+        "selection_role": "高值主峰探索",
+        "parameters": {
+          "power": 235.0,
+          "n2_flow": 12.0,
+          "ar_flow": 30.0,
+          "deposition_time": 2500.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 3,
+        "predicted_target": 15.9034101638871,
+        "predictive_std": 3.809265489519637,
+        "predictive_std_latent": 1.527594054927806,
+        "acquisition_score": 17.431004218814905,
+        "selection_purpose": "高值主峰探索",
+        "selection_role": "高值主峰探索",
+        "parameters": {
+          "power": 240.0,
+          "n2_flow": 13.0,
+          "ar_flow": 33.0,
+          "deposition_time": 1600.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 4,
+        "predicted_target": 15.931542247430322,
+        "predictive_std": 3.961805567395069,
+        "predictive_std_latent": 1.8758846928444357,
+        "acquisition_score": 17.80742694027476,
+        "selection_purpose": "高值主峰探索",
+        "selection_role": "高值主峰探索",
+        "parameters": {
+          "power": 225.0,
+          "n2_flow": 12.0,
+          "ar_flow": 28.0,
+          "deposition_time": 1900.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 5,
+        "predicted_target": 15.103342371346447,
+        "predictive_std": 4.078282142060459,
+        "predictive_std_latent": 2.11078782857367,
+        "acquisition_score": 17.214130199920117,
+        "selection_purpose": "高潜力多样化",
+        "selection_role": "高潜力多样化",
+        "parameters": {
+          "power": 250.0,
+          "n2_flow": 13.0,
+          "ar_flow": 27.0,
+          "deposition_time": 4200.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 6,
+        "predicted_target": 15.153525797950284,
+        "predictive_std": 3.8875613672667035,
+        "predictive_std_latent": 1.7135266006893668,
+        "acquisition_score": 16.86705239863965,
+        "selection_purpose": "高潜力多样化",
+        "selection_role": "高潜力多样化",
+        "parameters": {
+          "power": 210.0,
+          "n2_flow": 13.0,
+          "ar_flow": 28.0,
+          "deposition_time": 3500.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 7,
+        "predicted_target": 15.140173829674804,
+        "predictive_std": 3.922038262053382,
+        "predictive_std_latent": 1.7903698377754833,
+        "acquisition_score": 16.930543667450287,
+        "selection_purpose": "高潜力多样化",
+        "selection_role": "高潜力多样化",
+        "parameters": {
+          "power": 255.0,
+          "n2_flow": 14.0,
+          "ar_flow": 30.0,
+          "deposition_time": 3300.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 8,
+        "predicted_target": 15.108205695659091,
+        "predictive_std": 3.678103413697631,
+        "predictive_std_latent": 1.162533762460112,
+        "acquisition_score": 16.270739458119202,
+        "selection_purpose": "高潜力多样化",
+        "selection_role": "高潜力多样化",
+        "parameters": {
+          "power": 210.0,
+          "n2_flow": 14.0,
+          "ar_flow": 36.0,
+          "deposition_time": 1900.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 9,
+        "predicted_target": 14.723757271771808,
+        "predictive_std": 3.9390875437573936,
+        "predictive_std_latent": 1.8274164014778227,
+        "acquisition_score": 16.55117367324963,
+        "selection_purpose": "远域探索",
+        "selection_role": "远域探索",
+        "parameters": {
+          "power": 185.0,
+          "n2_flow": 12.0,
+          "ar_flow": 29.0,
+          "deposition_time": 1500.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      },
+      {
+        "candidate_rank": 10,
+        "predicted_target": 14.701707889620454,
+        "predictive_std": 3.8768199491215047,
+        "predictive_std_latent": 1.6890153773462109,
+        "acquisition_score": 16.390723266966667,
+        "selection_purpose": "远域探索",
+        "selection_role": "远域探索",
+        "parameters": {
+          "power": 190.0,
+          "n2_flow": 14.0,
+          "ar_flow": 27.0,
+          "deposition_time": 2500.0
+        },
+        "units": {
+          "power": "W",
+          "n2_flow": "sccm",
+          "ar_flow": "sccm",
+          "deposition_time": "s"
+        }
+      }
+    ],
+    "training_summary": {
+      "base_count": 63,
+      "project_count": 0,
+      "total_count": 63,
+      "unique_parameter_count": 63,
+      "repeated_parameter_observation_count": 0
+    },
+    "run_diagnostics": {
+      "training_count": 63,
+      "raw_grid_count": 1103232,
+      "constrained_grid_count": 602368,
+      "excluded_by_constraints": 500864,
+      "excluded_observed_count": 40,
+      "candidate_count_before_distance_filter": 602328,
+      "distance_eligible_count": 573697,
+      "distance_filter_applied": true,
+      "fitted_kernel": "0.996**2 * Matern(length_scale=4.04, nu=1.5) + WhiteKernel(noise_level=0.514)",
+      "fit_warning_count": 0,
+      "fit_warning_messages": [],
+      "target_mean": 10.51442680776014,
+      "target_std": 4.905303753901804,
+      "kappa": 1.0,
+      "top_n": 10,
+      "diversity_min_distance": 0.0,
+      "diversity_penalty_weight": 0.5,
+      "diversity_group_by": [
+        "n2_sccm",
+        "ar_sccm"
+      ],
+      "max_per_group": 2,
+      "high_ucb_pool_size": 20000,
+      "selection_kind": "tiered_4_4_2",
+      "selection_detail": "tiered 4 high-core + 4 diverse + 2 remote",
+      "uncertainty_for_acquisition": "latent posterior std excluding WhiteKernel",
+      "core_pool_count": 376,
+      "diverse_pool_count": 6389,
+      "remote_count": 2,
+      "train_r2": 0.5760053533597869,
+      "train_mae": 2.6333060310399343,
+      "optimizer_restarts": 20
+    },
+    "provenance": {
+      "algorithm_id": "gpr_ucb_matern15_iso_latent_tiered_v2",
+      "profile_id": "al40sc_mo_110mm_v2",
+      "profile_version": 2,
+      "model_profile_sha256": "4e081f62be90cf553e38c0100b19376287b11d66783bb13ae47dab6eea0634b9",
+      "base_dataset_id": "al40sc_mo_110mm_initial_63",
+      "base_dataset_sha256": "612ba2d24722023856079c53ac048f707cde2ed8939d40d8da30d47156a81ab9",
+      "input_sha256": "5ac9897e33a614fab7c0f68d06cfdcc48fa4480a33f61fdfa8042aa3092c4ba0",
+      "random_seed": 42
+    }
+  },
+  "notApplicable": {
+    "state": "succeeded",
+    "candidate_generation_status": "not_applicable",
+    "applicability": {
+      "status": "ineligible",
+      "profile_id": "al40sc_mo_110mm_v2",
+      "profile_version": 2,
+      "issues": [
+        "process_context_mismatch:substrate"
+      ]
+    },
+    "objective": {
+      "target_metric": "d33",
+      "transform": "absolute_value",
+      "direction": "maximize"
+    },
+    "candidates": [],
+    "training_summary": null,
+    "run_diagnostics": null,
+    "provenance": {
+      "algorithm_id": "gpr_ucb_matern15_iso_latent_tiered_v2",
+      "profile_id": "al40sc_mo_110mm_v2",
+      "profile_version": 2,
+      "model_profile_sha256": "4e081f62be90cf553e38c0100b19376287b11d66783bb13ae47dab6eea0634b9",
+      "base_dataset_id": "al40sc_mo_110mm_initial_63",
+      "base_dataset_sha256": "612ba2d24722023856079c53ac048f707cde2ed8939d40d8da30d47156a81ab9",
+      "input_sha256": "62b8f56efb7dc7005a8e024e3dfacd2f8df1cd64457e26212f5b1e63f5462e46",
+      "random_seed": 42
+    }
+  }
+}

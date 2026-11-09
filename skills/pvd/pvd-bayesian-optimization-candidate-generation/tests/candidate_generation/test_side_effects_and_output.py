@@ -37,8 +37,10 @@ def test_real_eligible_run_is_schema_valid_and_side_effect_free() -> None:
         "units",
         "predicted_target",
         "predictive_std",
+        "predictive_std_latent",
         "acquisition_score",
         "selection_purpose",
+        "selection_role",
     }
     assert set(result["candidates"][0]["parameters"]) == {
         "power", "n2_flow", "ar_flow", "deposition_time"
@@ -46,9 +48,15 @@ def test_real_eligible_run_is_schema_valid_and_side_effect_free() -> None:
     assert result["candidates"][0]["units"] == {
         "power": "W", "n2_flow": "sccm", "ar_flow": "sccm", "deposition_time": "s"
     }
-    assert result["candidates"][0]["selection_purpose"] == (
-        "exploration_exploitation_tradeoff_with_diversity"
-    )
+    # 生产 GP63 档案（v2）使用分层 4+4+2 批次选择：首候选属高值主峰探索层。
+    assert result["candidates"][0]["selection_purpose"] == result["candidates"][0]["selection_role"]
+    assert result["candidates"][0]["selection_role"] in {
+        "高值主峰探索", "高潜力多样化", "远域探索",
+    }
+    roles = [c["selection_role"] for c in result["candidates"]]
+    assert roles.count("高值主峰探索") == 4
+    assert roles.count("高潜力多样化") == 4
+    assert roles.count("远域探索") == 2
     assert result["training_summary"]["base_count"] == 63
     assert result["training_summary"]["project_count"] == 1
     assert result["training_summary"]["total_count"] == 64

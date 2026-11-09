@@ -163,6 +163,7 @@ class ProductionDefinitionSource:
         self,
         *,
         workflow_refs: set[tuple[str, int]] | None = None,
+        exclude_workflow_composition: bool = False,
     ) -> tuple[dict[str, Any], ...]:
         """Expose enabled Definitions plus exact frozen Workflow members.
 
@@ -186,6 +187,12 @@ class ProductionDefinitionSource:
                 and (str(row["definitionId"]), int(row["definitionVersion"])) not in included_refs
             ):
                 continue
+            if (
+                exclude_workflow_composition
+                and (str(row["definitionId"]), int(row["definitionVersion"])) not in included_refs
+                and self._is_canonical_workflow_composition(row)
+            ):
+                continue
             contract, contract_complete = self._definition_contract_state(row)
             rows.append({
                 "definitionId": str(row["definitionId"]),
@@ -201,18 +208,45 @@ class ProductionDefinitionSource:
             })
         return tuple(rows)
 
+    @staticmethod
+    def _is_canonical_workflow_composition(row: Mapping[str, Any]) -> bool:
+        """Whether the Definition freezes its skill sequence against a Workflow.
+
+        Starting such a Definition must prove that Workflow's canonical lineage.
+        A freeform Task carries no workflow admission, so it can never satisfy
+        the lineage check — offering these Definitions to the freeform planner
+        produces confirmable designs that fail closed at start
+        (``canonical_workflow_lineage_mismatch``). Non-composition Definitions
+        keep the normal Registry candidate-selection path and stay offerable.
+
+        Execution snapshots expose ``executionComposition``; planning-only
+        snapshots carry the same fact as ``canonicalWorkflowMembership`` (they
+        hold no capability I/O), so both spellings count.
+        """
+        composition = row.get("executionComposition")
+        if (
+            isinstance(composition, Mapping)
+            and composition.get("semantics") == "ordered_required"
+        ):
+            return True
+        membership = row.get("canonicalWorkflowMembership")
+        return isinstance(membership, Mapping) and bool(membership.get("workflowIds"))
+
     def planner_catalog_for_research_design(
         self,
         workflow_admission: Mapping[str, Any] | None,
     ) -> tuple[dict[str, Any], ...]:
         """Return frozen Workflow members plus enabled general research work.
 
-        Freeform planning retains its existing enabled Definition inventory. With a
-        Workflow, its exact Definition identities and versions determine membership;
-        execution composition and enablement do not remove frozen research duties.
+        With a Workflow, its exact Definition identities and versions determine
+        membership; execution composition and enablement do not remove frozen
+        research duties. Freeform planning (no admission) keeps the enabled
+        inventory minus canonical-Workflow-composition Definitions: those can
+        only start through their admitted Workflow, so the freeform planner
+        must not offer them as confirmable work.
         """
         if workflow_admission is None:
-            return self._planner_catalog_inventory()
+            return self._planner_catalog_inventory(exclude_workflow_composition=True)
         workflow_refs = self._workflow_definition_refs(workflow_admission)
         catalog = self._planner_catalog_inventory(workflow_refs=workflow_refs)
         return tuple(
@@ -286,9 +320,11 @@ class ProductionDefinitionSource:
     ) -> tuple[dict[str, Any], ...]:
         """Keep a user-selected Catalog capability out of ResearchDesign semantics.
 
-        The durable Catalog pin remains an execution constraint and is enforced by
-        ExecutionDecision. It must not remove scientifically required Definitions
-        while Planner is forming the ResearchDesign.
+        The durable Catalog pin remains an execution constraint enforced by
+        ExecutionDecision (candidate authorization), never a planning filter:
+        pinned starts plan against the same freeform catalog as ordinary
+        freeform starts (canonical-Workflow-composition Definitions excluded
+        because a freeform Task cannot prove their lineage at start).
         """
         del binding
         return self.planner_catalog_for_research_design(None)

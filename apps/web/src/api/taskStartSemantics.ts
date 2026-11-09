@@ -132,6 +132,7 @@ const START_BLOCKER_MESSAGES: Record<string, string> = {
   canonical_workflow_lineage_mismatch: "研究还没有开始，因为当前研究方案与已确认的执行流程不一致。需要重新核对研究方案。",
   canonical_skill_composition_not_frozen: "研究还没有开始，因为当前方案所需能力尚未准备完成。请稍后刷新项目查看状态。",
   canonical_skill_composition_unavailable: "研究还没有开始，因为当前方案所需能力暂不可用。请稍后刷新项目查看状态。",
+  input_contract_invalid: "研究还没有开始，因为方案中某个步骤需要真实执行材料（如可执行程序、运行参数），当前尚未提供。请修改研究方案，或改用对话/工作流方式发起。",
   needs_input: "研究还没有开始，因为开始前还需要补充信息。补充完成后才能继续。",
 };
 

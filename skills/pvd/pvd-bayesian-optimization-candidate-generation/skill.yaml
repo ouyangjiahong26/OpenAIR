@@ -1,6 +1,6 @@
 skill_id: pvd_bayesian_optimization_candidate_generation
 claude_name: pvd-bayesian-optimization-candidate-generation
-display_name: PVD Bayesian Optimization Candidate Generation
+display_name: 贝叶斯模型推荐候选参数
 domain: pvd
 stages:
 - execution_validation

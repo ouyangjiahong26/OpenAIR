@@ -69,6 +69,17 @@ execution_validation:
         triggerDefinitionIds:
         - pvd:evidence_applicability_comparability_analysis
         - pvd:experimental_feedback_round_analysis
+  - key: bo_candidate_generation
+    definitionVersion: 1
+    enabled: true
+    label: 贝叶斯模型推荐候选参数
+    description: 按冻结的模型配置，以同体系基线数据与真实实验反馈现场训练高斯过程代理模型，结合置信上界采集函数（以不含测量噪声的模型不确定性衡量探索价值），确定性推荐分层多样化的候选工艺参数组，供可行性核验与最终推荐使用。
+    instancePolicy:
+      mode: repeatable
+      executionReentry:
+        policyVersion: repeatable_definition_reentry_v1
+        triggerDefinitionIds:
+        - pvd:experimental_feedback_round_analysis
   - key: parameter_experiment_plan_feasibility_validation
     enabled: true
     label: 参数与实验方案可行性核验

@@ -1814,7 +1814,7 @@ def execute_durable_skill(
                 "contentBase64": base64.b64encode(content).decode("ascii"),
                 "contentType": "application/json",
                 "presentation": {
-                    "title": f"{canonical} result",
+                    "title": str(skill.get("displayName") or "").strip() or f"{canonical} result",
                     "mimeType": "application/json",
                     "metadata": {"runtime": kind, "skillId": canonical},
                     "contentSha256": digest,
@@ -1877,7 +1877,7 @@ def execute_durable_skill(
                 "contentBase64": base64.b64encode(content).decode("ascii"),
                 "contentType": "application/json",
                 "presentation": {
-                    "title": f"{canonical} result",
+                    "title": str(skill.get("displayName") or "").strip() or f"{canonical} result",
                     "mimeType": "application/json",
                     "metadata": {"runtime": kind, "skillId": canonical},
                     "contentSha256": digest,

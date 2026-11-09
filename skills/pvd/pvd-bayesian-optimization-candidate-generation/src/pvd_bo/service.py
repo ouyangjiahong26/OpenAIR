@@ -95,11 +95,23 @@ def run_candidate_generation(payload: Mapping[str, Any]) -> dict[str, Any]:
         scientific_state_facts, profile
     )
     applicability = evaluate_process_context(process_context, profile)
-
+    if applicability.status != "eligible":
+        # A cross-system or unresolved current system can never use this
+        # profile's base dataset honestly. Report not-applicable with the
+        # diagnostic issues; the Workflow node still records that BO ran.
+        return _not_applicable(applicability.to_dict(), profile, profile_sha256, input_sha256)
 
     base_dataset = load_verified_base_dataset(root, profile)
     base_applicability = evaluate_process_context(base_dataset.get("process_context"), profile)
+    if base_applicability.status != "eligible":
+        raise ValueError(
+            "model profile base dataset does not match its own applicability domain: "
+            + ";".join(base_applicability.issues)
+        )
 
+    # R0 (no same-system real feedback yet) trains on the frozen base dataset
+    # alone — the same first-round behavior as the standalone GP63 recommender.
+    # R1+ adds same-system real executed/valid observations on top.
     x_train, y_target, training_summary = combine_training_observations(
         base_dataset["observations"],
         real_training_observations,
@@ -115,7 +127,7 @@ def run_candidate_generation(payload: Mapping[str, Any]) -> dict[str, Any]:
         "objective": _objective_output(profile),
         "candidates": public_candidates,
         "training_summary": training_summary,
-        "run_diagnostics": diagnostics.to_dict(),
+        "run_diagnostics": diagnostics,
         "provenance": {
             "algorithm_id": str(profile["algorithm_id"]),
             "profile_id": str(profile["profile_id"]),

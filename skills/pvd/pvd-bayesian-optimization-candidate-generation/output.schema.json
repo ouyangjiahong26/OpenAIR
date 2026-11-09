@@ -153,8 +153,9 @@
             "description": "Raw UCB utility score before greedy diversity penalties. For a maximize profile it equals predicted_target + kappa * predictive_std."
           },
           "selection_purpose": {
-            "const": "exploration_exploitation_tradeoff_with_diversity",
-            "description": "Deterministic statement of why this algorithm selected the point: UCB exploration/exploitation tradeoff plus batch diversity."
+            "description": "Why this algorithm selected the point: greedy exploration/exploitation balance or the tiered batch role (高值主峰探索/高潜力多样化/远域探索).",
+            "type": "string",
+            "minLength": 1
           },
           "units": {
             "type": "object",
@@ -180,6 +181,17 @@
               }
             },
             "description": "Explicit standard units for the canonical public PVD candidate vector."
+          },
+          "predictive_std_latent": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Posterior std with the fitted WhiteKernel observation noise removed, in target units. Drives the UCB acquisition when the profile selects latent uncertainty."
+          },
+          "selection_role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "Tiered batch role of this candidate (e.g. 高值主峰探索 / 高潜力多样化 / 远域探索) or the greedy selection purpose."
           }
         }
       }
@@ -343,6 +355,44 @@
                   "minimum": 1
                 }
               ]
+            },
+            "selection_kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "selection_detail": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uncertainty_for_acquisition": {
+              "type": "string",
+              "minLength": 1
+            },
+            "core_pool_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "diverse_pool_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "remote_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "train_r2": {
+              "type": "number",
+              "description": "In-sample coefficient of determination of the model trained in this run (fit diagnostic, not a held-out estimate)."
+            },
+            "train_mae": {
+              "type": "number",
+              "minimum": 0,
+              "description": "In-sample mean absolute error in target units (fit diagnostic)."
+            },
+            "optimizer_restarts": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Random restarts used to optimize kernel hyperparameters during this run's training."
             }
           }
         }
@@ -363,7 +413,9 @@
       ],
       "properties": {
         "algorithm_id": {
-          "const": "gpr_ucb_matern25_v1"
+          "type": "string",
+          "minLength": 1,
+          "description": "Algorithm identity owned by the frozen model profile."
         },
         "profile_id": {
           "type": "string",

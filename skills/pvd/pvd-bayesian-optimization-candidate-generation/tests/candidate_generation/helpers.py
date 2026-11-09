@@ -30,9 +30,9 @@ def load_json(path: Path) -> dict:
 
 def schema_registry() -> Registry:
     state_schema = load_json(STATE_SCHEMA_PATH)
-    return Registry().with_resource(
-        state_schema["$id"], Resource.from_contents(state_schema)
-    )
+    registry = Registry()
+    registry = registry.with_resource(state_schema["$id"], Resource.from_contents(state_schema))
+    return registry
 
 
 def validate_public_input(payload: dict) -> None:

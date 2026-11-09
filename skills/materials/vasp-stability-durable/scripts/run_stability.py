@@ -58,12 +58,20 @@ def _python() -> str:
 # ---------------------------------------------------------------------------
 
 def _jcc_bin() -> str:
-    """jcc バイナリのフルパスを返す。PATH → OS 别 bundled 资产路径。
+    """jcc バイナリのフルパスを返す。JCC_CLI_PATH → PATH → OS 别 bundled 资产路径。
 
     Windows: skills/materials/jcc/jcc.exe（PE32+）
     Linux:   skills/materials/vasp-band-gap/assets/jcc（ELF 静态链接，docker 用）
+    公开仓不带上述二进制：容器内自行安装/挂载后经 JCC_CLI_PATH 或 PATH 指向。
     """
     import shutil
+    configured = os.environ.get("JCC_CLI_PATH", "").strip()
+    if configured:
+        if Path(configured).exists():
+            return configured
+        raise FileNotFoundError(
+            f"JCC_CLI_PATH is set but does not exist: {configured}"
+        )
     found = shutil.which("jcc")
     if found:
         return found

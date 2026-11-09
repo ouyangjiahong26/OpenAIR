@@ -1,0 +1,153 @@
+{
+  "acquisition": {
+    "kind": "ucb",
+    "kappa": 1.0,
+    "uncertainty": "latent"
+  },
+  "algorithm_id": "gpr_ucb_matern15_iso_latent_tiered_v2",
+  "applicability_domain": {
+    "numeric_tolerance": 1e-08,
+    "required_process_context": {
+      "power_supply_temperature": 200.0,
+      "substrate": "Mo",
+      "target_angle": "内偏30度",
+      "target_material": "40%AlSc",
+      "target_substrate_distance_mm": 110.0
+    }
+  },
+  "base_dataset": {
+    "dataset_id": "al40sc_mo_110mm_initial_63",
+    "observation_count": 63,
+    "relative_path": "assets/al40sc_mo_110mm_initial_63.json",
+    "sha256": "612ba2d24722023856079c53ac048f707cde2ed8939d40d8da30d47156a81ab9"
+  },
+  "constraints": [
+    {
+      "denominator_features": [
+        "n2_sccm",
+        "ar_sccm"
+      ],
+      "kind": "fraction_bounds",
+      "max": 0.52,
+      "min": 0.28,
+      "numerator": "n2_sccm"
+    },
+    {
+      "features": [
+        "n2_sccm",
+        "ar_sccm"
+      ],
+      "kind": "sum_bounds",
+      "max": 90.0,
+      "min": 39.0
+    }
+  ],
+  "diversity": {
+    "greedy_penalty_weight": 0.5,
+    "group_by": [
+      "n2_sccm",
+      "ar_sccm"
+    ],
+    "high_ucb_pool_size": 20000,
+    "max_per_group": 2,
+    "min_distance_from_observed": 0.0
+  },
+  "feature_order": [
+    "power_w",
+    "n2_sccm",
+    "ar_sccm",
+    "time_s"
+  ],
+  "gpr": {
+    "alpha": 1e-08,
+    "constant_bounds": [
+      0.001,
+      1000.0
+    ],
+    "kernel": "ConstantKernel * Matern(nu=1.5, ISO) + WhiteKernel",
+    "length_scale_bounds": [
+      0.1,
+      30.0
+    ],
+    "length_scale_initial": 1.0,
+    "normalize_y": false,
+    "optimizer_restarts": 20,
+    "white_noise_bounds": [
+      0.3,
+      1.0
+    ],
+    "white_noise_initial": 0.5,
+    "nu": 1.5
+  },
+  "grid": {
+    "ar_sccm": {
+      "max": 60.0,
+      "min": 27.0,
+      "step": 1.0
+    },
+    "n2_sccm": {
+      "max": 50.0,
+      "min": 12.0,
+      "step": 1.0
+    },
+    "power_w": {
+      "max": 255.0,
+      "min": 130.0,
+      "step": 5.0
+    },
+    "time_s": {
+      "max": 4600.0,
+      "min": 1500.0,
+      "step": 100.0
+    }
+  },
+  "objective": {
+    "direction": "maximize",
+    "target_metric": "d33",
+    "transform": "absolute_value"
+  },
+  "prediction_chunk_size": 10000,
+  "profile_id": "al40sc_mo_110mm_v2",
+  "profile_version": 2,
+  "random_seed": 42,
+  "top_n": 10,
+  "selection": {
+    "kind": "tiered_4_4_2",
+    "distance_to_history": {
+      "min": 0.0,
+      "max": 0.4
+    },
+    "tiered_4_4_2": {
+      "core_count": 4,
+      "diverse_count": 4,
+      "core_mu_min": 15.9,
+      "diverse_mu_min": 15.1,
+      "remote_mu_min": 14.7,
+      "remote_history_min": 0.2,
+      "core_min_batch_distance": 0.2,
+      "diverse_min_batch_distance": 0.2,
+      "remote_min_batch_distance": 0.2,
+      "first_eight_axis_caps": {
+        "power_w": 2,
+        "n2_sccm": 3,
+        "ar_sccm": 2,
+        "time_s": 2
+      },
+      "core_weights": {
+        "quality": 0.1,
+        "parameter_distance": 0.5,
+        "gas_distance": 0.4
+      },
+      "diverse_weights": {
+        "quality": 0.05,
+        "parameter_distance": 0.6,
+        "gas_distance": 0.35
+      },
+      "remote_weights": {
+        "quality": 0.45,
+        "parameter_distance": 0.4,
+        "gas_distance": 0.15
+      }
+    }
+  }
+}

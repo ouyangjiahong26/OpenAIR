@@ -33,10 +33,17 @@ def load_verified_base_dataset(skill_root: Path, profile: Mapping[str, Any]) -> 
 
     raw = path.read_bytes()
     actual_sha = hashlib.sha256(raw).hexdigest()
+    expected_sha = str(spec["sha256"])
+    if actual_sha != expected_sha:
+        raise ValueError(
+            f"base dataset sha256 mismatch: expected {expected_sha}, got {actual_sha}"
+        )
 
     dataset = json.loads(raw.decode("utf-8"))
 
     observations = dataset.get("observations")
+    if not isinstance(observations, list) or len(observations) != int(spec["observation_count"]):
+        raise ValueError("base dataset observation count mismatch")
     return dataset
 
 
@@ -51,9 +58,17 @@ def normalize_observation(
     observation_id = str(observation.get("observation_id") or "").strip()
 
     parameters = observation.get("parameters")
+    if not isinstance(parameters, Mapping):
+        raise ValueError(f"parameter mismatch for {observation_id}: parameters must be an object")
 
     expected_features = set(feature_order)
     actual_features = set(parameters)
+    if actual_features != expected_features:
+        missing = ",".join(sorted(expected_features - actual_features))
+        extra = ",".join(sorted(actual_features - expected_features))
+        raise ValueError(
+            f"parameter mismatch for {observation_id}: missing={missing}:extra={extra}"
+        )
 
     normalized_parameters = {
         feature: _finite_float(parameters[feature], f"{observation_id}.{feature}")
@@ -77,6 +92,10 @@ def normalize_observations(
     normalized = [normalize_observation(item, feature_order) for item in observations]
     ids = [item["observation_id"] for item in normalized]
     duplicate_ids = [item for item, count in Counter(ids).items() if count > 1]
+    if duplicate_ids:
+        raise ValueError(
+            "duplicate observation_id: " + ",".join(sorted(duplicate_ids))
+        )
     return normalized
 
 
@@ -99,6 +118,11 @@ def combine_training_observations(
 
     base_ids = {item["observation_id"] for item in base}
     collisions = [item["observation_id"] for item in project if item["observation_id"] in base_ids]
+    if collisions:
+        raise ValueError(
+            "duplicate observation_id collides with the base dataset: "
+            + ",".join(sorted(collisions))
+        )
 
     combined = base + project
     x = np.asarray(

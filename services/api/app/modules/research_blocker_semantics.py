@@ -19,6 +19,10 @@ _USER_NEEDS_INPUT_REASON_CODES = frozenset({
     # Caller-designated invocation input (e.g. PVD experiment feedback designates
     # the experiment_ref to diagnose). Only the triggering caller holds that fact.
     "execution_selection_invocation_context_unsatisfied",
+    # The confirmed design bound this step to a skill whose frozen input contract
+    # is unsatisfied (e.g. exploratory_run requires caller-designated executable/
+    # argv). Only the user can revise the design or designate those inputs.
+    "input_contract_invalid",
 })
 
 # Semantic gaps limit the formal conclusion that depends on the missing fact.

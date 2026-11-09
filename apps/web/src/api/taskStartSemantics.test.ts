@@ -40,4 +40,12 @@ describe("durable task start semantics", () => {
     settleDurableStartIntent("task-a", "selection-a", "committed", storage);
     expect(storage.getItem(key)).toBeNull();
   });
+
+  it("explains an unsatisfied execution input contract as a user-side revision", () => {
+    // 输入契约不满足（如方案给纯解释任务分配了 exploratory_run）归类 USER，
+    // 文案必须给用户可操作出路，而不是系统侧死路。
+    const message = taskStartStatusMessage("blocked", "input_contract_invalid");
+    expect(message).toContain("修改研究方案");
+    expect(message).not.toContain("系统尚不能安全启动");
+  });
 });

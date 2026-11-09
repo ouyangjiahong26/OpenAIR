@@ -4740,11 +4740,12 @@ skills:
     No scoring, no tiering, no persistence.
 - skill_id: pvd_bayesian_optimization_candidate_generation
   claude_name: pvd-bayesian-optimization-candidate-generation
-  display_name: PVD Bayesian Optimization Candidate Generation
+  display_name: 贝叶斯模型推荐候选参数
   domain: pvd
   stages:
   - execution_validation
-  substages: []
+  substages:
+  - bo_candidate_generation
   packs:
   - pvd
   enabled: true
@@ -4765,13 +4766,6 @@ skills:
   review_policy:
     contract_version: 2
     mode: schema_validated_only
-  conditional_binding:
-    policy_version: conditional_capability_binding_v1
-    evaluator_ref: python:pvd_bo.applicability:evaluate_capability_applicability
-    required_runtime_fact_refs:
-    - runtime:research-task:v1
-    - runtime:execution-instance:v1
-    - runtime:scientific-state:v1
   fixture_status: missing
   notes: Optional deterministic PVD candidate method. It may supply candidate settings
     when applicable, does not define the Workflow parameter scope, and does not replace

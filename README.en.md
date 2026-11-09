@@ -34,6 +34,7 @@
 
 ## 🗞️ News
 
+- **2026-11-09**　🔬 **New "Bayesian model candidate-parameter recommendation" node in the PVD deterministic chain**: each run trains a Gaussian-process surrogate on same-system baseline data plus real experimental feedback and recommends tiered candidate process parameters, visualized in the workbench as a candidate table with per-tier intent; freeform (no @workflow) planning and direct-answer paths hardened
 - **2026-10-31**　🏁 **v1.0.0 — first stable release**: four-stage research orchestration runtime, 200+ contract-based research skills, dual execution mode (live / keyless replay), fully traceable evidence chains, multi-user & quotas, one-command Docker deployment with [openair-cli](https://pypi.org/project/openair-cli/). [Release Notes](https://github.com/pdl-openair/OpenAIR/releases/tag/v1.0.0)
 - **2026-10-31**　🧰 [openair-cli 0.2.0](https://pypi.org/project/openair-cli/): live Docker build progress, interactive env-config wizard (`openair config`), environment checkup (`openair doctor`), log tailing (`openair logs`)
 - **2026-10-29**　🚀 v0.1.0 — first public release: four-stage orchestration runtime, 200+ research skills, evaluation & replay assets, dual execution mode (live / replay). [Release Notes](https://github.com/pdl-openair/OpenAIR/releases/tag/v0.1.0)
@@ -114,10 +115,10 @@ Research suffers from **long cycles, fragmented tooling, untraceable evidence, a
 
 | Capability | Environment variables | Notes |
 |---|---|---|
-| Model gateway (skill execution + planning) | `ANTHROPIC_*` / `LLM_PROVIDER_*` | any Anthropic / OpenAI-compatible gateway |
+| Model gateway (skill execution + planning) | `LLM_PROVIDER_*` (one set covers both) | any OpenAI / Anthropic-compatible gateway; under compose, the in-container `ANTHROPIC_*` falls back to `LLM_PROVIDER_*`, so planner and skills share one credential set |
 | Materials Project | `MP_API_KEY` | **free**: https://next-gen.materialsproject.org/api |
 | Materials MCP service | `MATERIALS_MCP_BASE_URL` | self-hosted or an existing MCP endpoint |
-| HPC DFT (VASP) | `JCC_*` | when you have an HPC account |
+| HPC DFT (VASP) | `JCC_*` | when you have an HPC account (credential vars are passed to both api and durable-worker) |
 | Cloud lab platform | `FLUX_BASE_URL` / `FLUX_API_KEY` | requires institutional VPN and a platform account |
 
 Without these accounts: the platform itself (login, tasks, board, artifact library) and replay mode remain fully usable; nodes requiring external data/compute report an honest `partial_failure`.
@@ -260,11 +261,12 @@ export UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
 |---|---|---|
 | Execution mode | `SKILL_EXEC_MODE=live \| replay` | default `live`; `replay` for a zero-key walkthrough |
 | Demo data | `OPENAIR_DEV_SEED_FIXTURES=1` | great for first-time users; keep 0 for daily use |
-| Skill/Agent gateway | `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_KEY`, `OPENAIR_CLAUDE_MODEL` | required for `live`; any Anthropic-compatible gateway |
+| Skill/Agent gateway | `LLM_PROVIDER_BASE_URL`, `LLM_PROVIDER_API_KEY`, `OPENAIR_CLAUDE_MODEL` | required for `live`; under compose the in-container `ANTHROPIC_*` falls back to `LLM_PROVIDER_*` — fill the same set. Use `OPENAIR_ANTHROPIC_*` overrides to split gateways (plain `ANTHROPIC_*` in `.env` does not reach the containers) |
 | Planner (proposal/solution) | `LLM_PROVIDER_BASE_URL`, `LLM_PROVIDER_API_KEY`, `LLM_PROVIDER_MODEL` | required for `live`; OpenAI-compatible endpoint (avoid `…/api/anthropic` paths — they 404) |
 | Literature retrieval | `OT_DEEPXIV_TOKEN`, `SEMANTIC_SCHOLAR_API_KEY` | only for literature skills |
 | Materials MCP | `MATERIALS_MCP_BASE_URL`, `MP_API_KEY` | for live crystal-design pipelines |
-| HPC (JCC) | `JCC_BASE_URL / JCC_USERNAME / JCC_PASSWORD / JCC_CLUSTER_NAME / JCC_CLI_PATH` | only when connecting HPC; the `jcc` CLI is not distributed in this repo — install it yourself and point `JCC_CLI_PATH` at it |
+| HPC (JCC) | `JCC_BASE_URL / JCC_USERNAME / JCC_PASSWORD / JCC_CLUSTER_NAME / JCC_CLI_PATH` | only when connecting HPC (passed to both api and durable-worker); the `jcc` CLI is not distributed in this repo — install the Linux build and point `JCC_CLI_PATH` at it, or mount it onto the container PATH (e.g. `/usr/local/bin/jcc`) |
+| Pseudopotential library (VASP) | `VASP_PSP_DIR` | for DFT stability verification; must be a real path inside the durable-worker container (mount your host POTCAR dir first); when absent, POTCARs are generated via jcc vaspkit |
 | Cloud lab platform | `FLUX_BASE_URL`, `FLUX_API_KEY` | requires institutional VPN and a platform account; without it, the resource plaza falls back to a local demo snapshot |
 
 </details>
