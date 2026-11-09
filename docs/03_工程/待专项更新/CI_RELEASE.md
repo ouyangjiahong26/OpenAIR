@@ -22,7 +22,7 @@
 - `platform`：变更文件的 CRLF、大小写冲突、可执行位、bash 语法，以及 compose 配置
 - `windows`：CRLF 与盘符路径敏感用例
 - `gate-canary`：门禁带病样本必红、干净样本必绿
-- `docker-build`：compose 镜像构建
+- `docker-build`：api 与 web 的 compose 镜像构建；worker 镜像由 release 工作流构建
 - `web-build`：现有前端构建快检
 - `secrets-scan`：gitleaks 全历史扫描
 
