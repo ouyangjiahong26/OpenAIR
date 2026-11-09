@@ -188,4 +188,4 @@ def test_prepared_provider_adapter_uses_the_same_phase_operation_identity(
         originating_authority="research_start:research_planner",
     ):
         execute_prepared_attempt(prepared, transport=Transport())
-    assert observed == ["research_start:research_planner"]
+    assert observed == ["research_start:research_planner:1"]

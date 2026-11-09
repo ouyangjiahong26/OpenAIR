@@ -536,7 +536,7 @@ def execute_prepared_attempt(
             request_body=request_body,
             endpoint=prepared.endpoint,
             adapter=prepared.provider,
-            operation_identity=f"research_start:{prepared.phase}",
+            operation_identity=f"research_start:{prepared.phase}:{prepared.ordinal}",
             provider=prepared.provider,
             model=prepared.model,
         )
