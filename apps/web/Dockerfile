@@ -21,8 +21,11 @@ ENV CI=1 \
 
 # npm 源可被构建参数覆盖；源不可用时回退官方 registry。
 ARG NPM_REGISTRY=https://registry.npmmirror.com
-RUN npm install -g pnpm@9.15.0 --registry "$NPM_REGISTRY" || \
-    npm install -g pnpm@9.15.0 --registry https://registry.npmjs.org
+RUN registry="$NPM_REGISTRY"; \
+    if ! wget -q -T 8 -O /dev/null "$registry/pnpm/-/pnpm-9.15.0.tgz"; then \
+      registry=https://registry.npmjs.org; \
+    fi; \
+    npm install -g pnpm@9.15.0 --registry "$registry"
 
 WORKDIR /repo
 
@@ -31,9 +34,11 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
 
-RUN pnpm config set registry "$NPM_REGISTRY" && \
-    (pnpm install --frozen-lockfile || \
-     (pnpm config set registry https://registry.npmjs.org && pnpm install --frozen-lockfile))
+RUN registry="$NPM_REGISTRY"; \
+    if ! wget -q -T 8 -O /dev/null "$registry/react/-/react-18.3.1.tgz"; then \
+      registry=https://registry.npmjs.org; \
+    fi; \
+    pnpm config set registry "$registry" && pnpm install --frozen-lockfile
 
 # 拷源码：shared 作为 vite alias 源被直接打包；web 是构建目标
 # fixtures 经 vite @fixtures alias 被部分 fixture 数据模块导入，构建期必须存在

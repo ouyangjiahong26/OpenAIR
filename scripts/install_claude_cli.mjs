@@ -82,20 +82,28 @@ function platformPkgName() {
 
 /** 不支持 Range 时退回整文件下载；仍逐次重试并用 manifest shasum 校验。 */
 async function downloadFull(url, shasum) {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      const r = await fetch(url)
-      if (!r.ok) throw new Error(`status ${r.status}`)
-      const buf = Buffer.from(await r.arrayBuffer())
-      const actual = createHash('sha1').update(buf).digest('hex')
-      if (actual !== shasum) throw new Error(`shasum 不匹配: 期望 ${shasum}，实际 ${actual}`)
-      process.stdout.write(`下载 ${buf.length} bytes（整文件）\n`)
-      return buf
-    } catch (err) {
-      if (attempt >= TRIES) die(`整文件下载重试 ${TRIES} 次仍失败: ${err.message}`)
-      await new Promise((r) => setTimeout(r, 1000 * attempt))
+  const urls = [url]
+  if (url.includes('https://registry.npmmirror.com/')) {
+    urls.push(url.replace('https://registry.npmmirror.com/', 'https://registry.npmjs.org/'))
+  }
+  let lastError
+  for (const candidate of urls) {
+    for (let attempt = 1; attempt <= TRIES; attempt++) {
+      try {
+        const r = await fetch(candidate)
+        if (!r.ok) throw new Error(`status ${r.status}`)
+        const buf = Buffer.from(await r.arrayBuffer())
+        const actual = createHash('sha1').update(buf).digest('hex')
+        if (actual !== shasum) throw new Error(`shasum 不匹配: 期望 ${shasum}，实际 ${actual}`)
+        process.stdout.write(`下载 ${buf.length} bytes（整文件）\n`)
+        return buf
+      } catch (err) {
+        lastError = err
+        if (attempt < TRIES) await new Promise((r) => setTimeout(r, 1000 * attempt))
+      }
     }
   }
+  die(`整文件下载失败: ${lastError?.message || 'unknown'}`)
 }
 
 /** 分块下载；每块独立重试（指数退避），整体用 manifest shasum (sha1) 校验。 */
