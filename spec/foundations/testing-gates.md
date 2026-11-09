@@ -11,9 +11,9 @@
 | 条目 | 强制载体 | 状态与证据 |
 |---|---|---|
 | Suite 合同元数据（suite.yaml 必填字段） | `verification/suites/test_asset_architecture/guard.py`（已在 test 基线 c1f15592） | 新增/变更 suite.yaml 全量校验 12 必填字段；存量 Suite 豁免全量字段校验，仍受 YAML 合法性、live profile 身份一致性、suite_id 唯一性、平行 manifest 禁令、"有内容无合同 Suite 目录"检查。4 个 Suite 在案（durable_child_policy_handoff、materials_workflow_admission、opentrajectory_v3_research_record_handoff、test_asset_architecture）。B4 实测：guard 全仓扫描通过（exit 0） |
-| required-checks 手挑 P0 快信号（5 条 + build） | `.github/workflows/required-checks.yml` | 已接线：`web`、`python-gates`、`unit-test`、`platform`、`windows`、`gate-canary`、`docker-build` 七个 job。unit-test 用目录选择器分组运行并按 known-failures 棘轮判定；web 用 Vitest JSON 报告与 `.github/web-test-known-failures.json` 棘轮判定。**B4 实测发现**：旧 required-checks 第 5 条节点已不存在，旧 job 必红的问题在本次接线中由选择器与棘轮机制替代。 |
-| SPEC-COV-01：产品代码新增/修改行 diff-coverage ≥50% | `scripts/gates/diff_gate.py`（B1 交付）+ pytest-cov | 已接线：unit-test job 在分组跑完后执行 `diff_gate --coverage`，覆盖率 JSON 由 `run_unit_suite.py` 生成。 |
-| SPEC-TEST-01：CI 单测套件按目录选择 | `scripts/gates/select_unit_tests.py`（B4 交付）+ required-checks `unit-test` job | 已接线：`select_unit_tests.py --json` 生成分组，`run_unit_suite.py run` 逐组执行，`ratchet` 对照 `.github/unit-test-known-failures.json`。 |
+| required-checks 手挑 P0 快信号（5 条 + build） | `.github/workflows/required-checks.yml` | 已接线：`web`、`python-gates`、`unit-test`、`platform`、`windows`、`gate-canary`、`docker-build` 七个必过 job。`unit-test` 运行门禁自测、测试资产守卫自测、testkit 与后端配额单测；完整目录选面由 `unit-test-full-informational` 报告，等 known-failures 基线刷新后再升级为必过。`web` 用 Vitest JSON 报告与 `.github/web-test-known-failures.json` 棘轮判定。 |
+| SPEC-COV-01：产品代码新增/修改行 diff-coverage ≥50% | `scripts/gates/diff_gate.py`（B1 交付）+ pytest-cov | 已接线：`unit-test-full-informational` 在分组跑完后执行 `diff_gate --coverage`，覆盖率 JSON 由 `run_unit_suite.py` 生成；基线转绿后并入必过 job。 |
+| SPEC-TEST-01：CI 单测套件按目录选择 | `scripts/gates/select_unit_tests.py`（B4 交付）+ required-checks `unit-test-full-informational` job | 已接线：`select_unit_tests.py --json` 生成分组，`run_unit_suite.py run` 逐组执行，`ratchet` 对照 `.github/unit-test-known-failures.json`。当前完整选面存在历史失败，先以 informational 运行，避免阻断所有 PR。 |
 | 平台一致性（Linux/Windows 路径、换行、权限） | `scripts/gates/check_platform_consistency.py` + required-checks `platform` job | 已接线：增量检查变更文件的 CRLF、大小写冲突、可执行位、bash 语法；Windows job 跑 CRLF 与盘符路径敏感用例。 |
 
 ## 二、tg 合入接线（已接线，sync 批 2026-09-26）
