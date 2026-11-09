@@ -19,7 +19,7 @@
 
 评论、issue、PR 由 AI 生成或辅助时，正文最后一行加标记，语言跟正文一致。中文用 `> 本评论由 <Harness> 的 <模型> 完成。`，整段只是转述维护者结论时写 `辅助完成`。英文用 `> Written by <Harness> using <model>.`。Harness 与模型填当前会话实际值，取不到写 `unknown`。
 
-提交信息里的 AI 署名用 `Co-authored-by`，规则见 [spec/collaboration/git_commit_rules.md](../../spec/collaboration/git_commit_rules.md) 第 11 节。本仓库不为 issue 与 PR 标题加前缀。
+提交信息里的 AI 署名用 `Co-authored-by`，规则见 [spec/collaboration/git_commit_rules.md](../../spec/collaboration/git_commit_rules.md) 第 11 节。issue 标题按 `.github/ISSUE_TEMPLATE/` 的模板加 `[bug]`、`[task]` 或 `[release]` 前缀。PR 标题按 `/open-pr` 约定加 `[AI Generated][类型]` 前缀。
 
 ## 工作状态
 
