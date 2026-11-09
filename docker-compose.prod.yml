@@ -1,0 +1,19 @@
+# 生产暴露用的端口收敛覆盖层。
+# 用法：docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# 只保留本机 loopback 的 web 端口供反向隧道访问；API 与基础设施端口不出宿主机。
+services:
+  api:
+    ports: !override []
+
+  web:
+    ports: !override
+      - "127.0.0.1:8080:80"
+
+  postgres:
+    ports: !override []
+
+  redis:
+    ports: !override []
+
+  minio:
+    ports: !override []
