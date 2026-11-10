@@ -16,6 +16,35 @@ from collections.abc import Mapping
 PLANNER_TASK_BUDGET_ENV = "OPENAIR_RESEARCH_START_PLANNER_LLM_TIMEOUT_SECONDS"
 DEFAULT_PLANNER_TASK_BUDGET_SECONDS = 90.0
 
+PLANNER_MAX_TOKENS_ENV = "OPENAIR_RESEARCH_START_PLANNER_LLM_MAX_TOKENS"
+DEFAULT_PLANNER_MAX_TOKENS = 1800
+MINIMUM_PLANNER_MAX_TOKENS = 600
+
+
+def research_start_planner_max_tokens(
+    environ: Mapping[str, str] | None = None,
+) -> int:
+    """Return the deployment-authoritative output token budget for one judgment.
+
+    Reasoning models may spend a large share of this budget on hidden thinking
+    before emitting the final JSON. A deployment that selects a high reasoning
+    effort must therefore be able to raise the budget without a hidden platform
+    ceiling; only a small floor protects against unusable zero-token requests.
+    Invalid values fall back to the stable capability default.
+    """
+
+    values = os.environ if environ is None else environ
+    raw = values.get(PLANNER_MAX_TOKENS_ENV)
+    if raw is None or not str(raw).strip():
+        return DEFAULT_PLANNER_MAX_TOKENS
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_PLANNER_MAX_TOKENS
+    if value <= 0:
+        return DEFAULT_PLANNER_MAX_TOKENS
+    return max(MINIMUM_PLANNER_MAX_TOKENS, value)
+
 
 def research_start_planner_task_budget_seconds(
     environ: Mapping[str, str] | None = None,
