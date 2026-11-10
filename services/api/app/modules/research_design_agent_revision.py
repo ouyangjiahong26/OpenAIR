@@ -31,7 +31,10 @@ from app.modules.research_design_service import (
     validate_research_design_proposal,
 )
 from app.modules.research_orchestration_repository import TaskRevisionConflictError
-from app.modules.research_start_planner_budget import research_start_planner_task_budget_seconds
+from app.modules.research_start_planner_budget import (
+    research_start_planner_max_tokens,
+    research_start_planner_task_budget_seconds,
+)
 from app.modules.target_output_ownership import (
     legacy_revision_context,
     restore_legacy_revision_targets,
@@ -349,7 +352,7 @@ def _agent_revision_openai_model() -> str:
 
 
 def _agent_revision_max_tokens() -> int:
-    return _bounded_int_env("OPENAIR_RESEARCH_START_PLANNER_LLM_MAX_TOKENS", 1800, 600, 5000)
+    return research_start_planner_max_tokens()
 
 
 def _agent_revision_temperature() -> float:
