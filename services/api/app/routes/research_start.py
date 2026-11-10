@@ -19,6 +19,7 @@ from app.modules.research_start_repository import (
     TerminalStateError,
 )
 from app.modules.resource_catalog import ResourceCatalogUnavailableError, get_resource_for_research_start
+from app.modules.token_ledger_repository import get_token_ledger_repository
 
 
 router = APIRouter(prefix="/research-start", tags=["research-start"])
@@ -188,6 +189,12 @@ class ResearchStartPlanningProgressOut(BaseModel):
     thoughts: list[ResearchStartThoughtOut] = Field(default_factory=list)
 
 
+class ResearchStartTokenUsageOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    totalTokens: int = Field(ge=0)
+
+
 class ResearchStartSessionStatusOut(BaseModel):
     sessionId: str
     status: Literal["running", "completed", "failed", "external_result_unknown"]
@@ -208,6 +215,7 @@ class ResearchStartSessionStatusOut(BaseModel):
     selectedResourceId: str | None = None
     selectedResourceVersion: str | None = None
     selectedCapabilityId: str | None = None
+    tokenUsage: ResearchStartTokenUsageOut | None = None
 
 
 class ResearchStartDisplayContextOut(BaseModel):
@@ -388,6 +396,28 @@ def submit_research_start(
     return accepted
 
 
+def _attach_session_token_usage(
+    session: dict, owner_id: str, workspace_id: str
+) -> dict:
+    """Expose the reserved task's real ledger total without blocking status reads."""
+    task_id = str(session.get("reservedTaskId") or "").strip()
+    if not task_id:
+        result = session.get("result")
+        if isinstance(result, dict):
+            task_id = str(result.get("taskId") or "").strip()
+    if not task_id:
+        return session
+    try:
+        total = get_token_ledger_repository().sum_task_usage(
+            owner_id,
+            task_id,
+            workspace_id=workspace_id,
+        )
+    except Exception:  # usage display is additive; session status stays authoritative
+        return session
+    return {**session, "tokenUsage": {"totalTokens": int(total)}}
+
+
 @router.get(
     "/sessions/{session_id}",
     response_model=ResearchStartSessionStatusOut,
@@ -398,8 +428,12 @@ def get_research_start_session(
 ) -> ResearchStartSessionStatusOut:
     try:
         return ResearchStartSessionStatusOut.model_validate(
-            research_start_repository.get_scoped_session(
-                identity["ownerId"], identity["workspaceId"], session_id
+            _attach_session_token_usage(
+                research_start_repository.get_scoped_session(
+                    identity["ownerId"], identity["workspaceId"], session_id
+                ),
+                identity["ownerId"],
+                identity["workspaceId"],
             )
         )
     except SessionNotFoundError as exc:
