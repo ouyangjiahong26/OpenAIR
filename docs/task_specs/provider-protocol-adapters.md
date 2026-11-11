@@ -41,6 +41,9 @@ Provider 层当前固定 OpenAI 兼容 chat completions：
 - Anthropic 结构化输出：`tools: [{name, description, input_schema}]` + `tool_choice: {type: "tool", name}`；schema 复用 Responses 的投影与无损降级管线，跳过 OpenAI 专属的 strict 断言；解析取 `tool_use.input`。
 - 规划器流式 thinking writer 仅对 chat 协议启用（现状即如此，显式化为 `protocol_supports_stream`）。
 - registry 探活（`discover_provider_models`、`_preflight_model`）按协议取端点、认证头与最小请求体。
+- 协议选择器与 registry adapter 必须一致：`provider_protocol.reconcile_provider_protocol` 在发出任何 Provider I/O 前比较两者归一后的协议，不一致即失败。校验放在执行路径而非仅启动时的 `resolve_model_binding`，因此 `validate=False` 绑定或直接读环境变量的链路（`llm_structured_runner`、`research_design_agent_revision._agent_revision_provider`）无法绕过；registry 解析不出凭证的旧式回退路径上，选择器仍是唯一权威。
+- reasoning effort 只发给推理模型（`_is_reasoning_model` 门控，与 `_planner_reasoning_effort` 一致）：非推理模型收到 `reasoning`/`reasoning_effort` 会 4xx，因此改走 temperature；Responses 请求体里 effort 与 temperature 互斥（设 effort 即丢弃 temperature）。
+- Anthropic `cache_creation_input_tokens` / `cache_read_input_tokens` 只保留在用量原始字段，不计入计费 token（与全仓既有约定一致），本地用量会略低于供应商账单；README 已注明。
 
 ## 影响范围
 

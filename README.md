@@ -269,6 +269,8 @@ export UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple   # PyPI 源（
 | 赝势库（VASP） | `VASP_PSP_DIR` | 跑 DFT 稳定性验证需要；填 durable-worker 容器内真实路径（先把宿主机 POTCAR 目录挂载进容器）；缺失时尝试经 jcc vaspkit 生成 |
 | 云实验平台 | `FLUX_BASE_URL`、`FLUX_API_KEY` | 需机构 VPN 与平台账号；不配置时资源广场自动展示本地演示快照 |
 
+> 计费口径：走 Anthropic Messages 协议时，`cache_creation_input_tokens`（以及 `cache_read_input_tokens`）只保留在用量原始字段里，不计入 `input_tokens` / `output_tokens` 计费——与全仓既有约定一致，因此本地记录的 token 用量会略低于供应商账单。
+
 </details>
 
 <details>

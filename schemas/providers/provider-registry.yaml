@@ -2,14 +2,12 @@ schemaVersion: 1
 description: "OpenAIR provider registry. Agent policies reference providerId, never a concrete model."
 defaultProviderId: openai_primary
 
-providers:
-  - providerId: openai_primary
-
 # adapter 可选协议（huiyan_chat_completions 是 openai_chat_completions 的兼容别名）：
 #   openai_chat_completions  POST /v1/chat/completions（默认，OpenAI 兼容网关）
 #   openai_responses         POST /v1/responses（json_schema 结构化输出、reasoning 透传）
 #   anthropic_messages       POST /v1/messages（x-api-key、顶层 system、tool use 结构化输出）
 # 切协议只改 adapter；environment 三个键名可换成该 provider 专属的环境变量。
+#
 # 示例（Responses 网关）：
 #   - providerId: openai_responses_primary
 #     adapter: openai_responses
@@ -26,6 +24,9 @@ providers:
 #                       returnsReceiptOrRemoteRunId: false, queryByIdempotencyKey: false,
 #                       queryByReceiptOrRemoteRunId: false}
 #     environment: {model: ANTHROPIC_MESSAGES_MODEL, baseUrl: ANTHROPIC_MESSAGES_BASE_URL, apiKey: ANTHROPIC_MESSAGES_API_KEY}
+
+providers:
+  - providerId: openai_primary
     adapter: huiyan_chat_completions
     maxOutputChars: 50000
     submissionSafety:

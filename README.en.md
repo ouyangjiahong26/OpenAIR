@@ -269,6 +269,8 @@ export UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
 | Pseudopotential library (VASP) | `VASP_PSP_DIR` | for DFT stability verification; must be a real path inside the durable-worker container (mount your host POTCAR dir first); when absent, POTCARs are generated via jcc vaspkit |
 | Cloud lab platform | `FLUX_BASE_URL`, `FLUX_API_KEY` | requires institutional VPN and a platform account; without it, the resource plaza falls back to a local demo snapshot |
 
+> Billing: on the Anthropic Messages protocol, `cache_creation_input_tokens` (and `cache_read_input_tokens`) stay in the raw usage payload only — they are not counted toward billed `input_tokens` / `output_tokens`, matching the repository-wide convention, so locally recorded usage runs slightly below the provider invoice.
+
 </details>
 
 <details>
