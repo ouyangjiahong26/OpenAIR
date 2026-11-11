@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
@@ -21,6 +22,8 @@ from app.modules.research_start_repository import (
 from app.modules.resource_catalog import ResourceCatalogUnavailableError, get_resource_for_research_start
 from app.modules.token_ledger_repository import get_token_ledger_repository
 
+
+_log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/research-start", tags=["research-start"])
 resource_catalog_router = APIRouter(prefix="/resources", tags=["resources"])
@@ -414,6 +417,12 @@ def _attach_session_token_usage(
             workspace_id=workspace_id,
         )
     except Exception:  # usage display is additive; session status stays authoritative
+        _log.warning(
+            "research start token usage unavailable sessionId=%s taskId=%s",
+            session.get("sessionId"),
+            task_id,
+            exc_info=True,
+        )
         return session
     return {**session, "tokenUsage": {"totalTokens": int(total)}}
 
