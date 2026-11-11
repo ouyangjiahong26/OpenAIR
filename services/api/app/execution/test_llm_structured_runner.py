@@ -469,6 +469,11 @@ def _install_protocol_fake_client(
     monkeypatch.setenv("LLM_PROVIDER_API_KEY", "test-key")
     monkeypatch.setenv("LLM_PROVIDER_BASE_URL", "https://example.test")
     monkeypatch.setenv("OPENTRAJECTORY_LLM_PROVIDER", provider)
+    # These tests pin the wire protocol through the selector, so they run on the
+    # legacy credential path: without a registry-resolvable model variable the
+    # registry adapter is unknown and the selector is the sole protocol
+    # authority (a real .env in a developer checkout must not change that).
+    monkeypatch.delenv("LLM_PROVIDER_MODEL", raising=False)
     return calls
 
 
@@ -600,3 +605,51 @@ def test_anthropic_messages_empty_reply_routes_to_correction_retry(monkeypatch, 
     assert output == {"value": 0.9}  # noqa: S101 - test assertion
     assert len(calls) == 2  # noqa: S101 - test assertion
     assert meta["structured_output_retries"] == 1  # noqa: S101 - test assertion
+
+
+# ---------------------------------------------------------------------------
+# Selector/registry protocol consistency (fail closed before Provider I/O).
+# ---------------------------------------------------------------------------
+
+
+def test_selector_conflicting_with_registry_adapter_fails_before_provider_io(
+    monkeypatch, tmp_path
+) -> None:
+    # A resolvable registry supplies the credentials from the default provider
+    # (schemas/providers/provider-registry.yaml: huiyan_chat_completions), while
+    # the selector asks for the Anthropic wire protocol. Previously the request
+    # would be sent with the chat gateway's key; the path must fail closed.
+    calls = _install_protocol_fake_client(
+        monkeypatch, [_completion('{"value": 0.9}')], "anthropic_messages"
+    )
+    monkeypatch.setenv("LLM_PROVIDER_MODEL", "registry-model")
+
+    with pytest.raises(RuntimeError) as raised:
+        runner.run_skill_with_llm(
+            _skill(tmp_path), {}, tmp_path / "workspace", "task",
+        )
+
+    message = str(raised.value)
+    assert "OPENTRAJECTORY_LLM_PROVIDER=anthropic_messages" in message  # noqa: S101 - test assertion
+    assert "registry adapter huiyan_chat_completions" in message  # noqa: S101 - test assertion
+    assert calls == []  # noqa: S101 - test assertion
+
+
+def test_selector_matching_registry_adapter_protocol_still_executes(
+    monkeypatch, tmp_path
+) -> None:
+    # The same protocol under two names (the huiyan alias and the canonical
+    # protocol name) is not a mismatch.
+    calls = _install_protocol_fake_client(
+        monkeypatch, [_completion('{"value": 0.9}')], "openai_chat_completions"
+    )
+    monkeypatch.setenv("LLM_PROVIDER_MODEL", "registry-model")
+
+    output, _elapsed, meta = runner.run_skill_with_llm(
+        _skill(tmp_path), {}, tmp_path / "workspace", "task",
+    )
+
+    assert output == {"value": 0.9}  # noqa: S101 - test assertion
+    assert len(calls) == 1  # noqa: S101 - test assertion
+    assert calls[0]["url"].endswith("/v1/chat/completions")  # noqa: S101 - test assertion
+    assert meta["provider"] == "openai_chat_completions"  # noqa: S101 - test assertion

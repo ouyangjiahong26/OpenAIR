@@ -23,6 +23,7 @@ from app.execution.provider_protocol import (
     protocol_headers,
     protocol_response_format,
     protocol_supports_stream,
+    reconcile_provider_protocol,
 )
 
 CHAT = "openai_chat_completions"
@@ -374,3 +375,95 @@ def test_chat_extraction_rejects_reasoning_only_body() -> None:
     }
     with pytest.raises(ValueError):
         extract_protocol_text(CHAT, reasoning_only)
+
+
+# ---------------------------------------------------------------------------
+# Explicit selector vs. registry adapter reconciliation.
+#
+# The registry supplies the credentials; an explicit protocol selector that
+# names a different protocol would send one protocol's body to another
+# gateway's key, so it must fail closed before any Provider I/O.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("selector", "registry_adapter"),
+    [
+        ("openai_chat_completions", "huiyan_chat_completions"),
+        ("huiyan_chat_completions", "openai_chat_completions"),
+        ("anthropic_messages", "anthropic_messages"),
+        ("openai_responses", "openai_responses"),
+    ],
+)
+def test_reconcile_accepts_selector_that_matches_registry_protocol(
+    selector: str, registry_adapter: str
+) -> None:
+    assert (
+        reconcile_provider_protocol(
+            selector, registry_adapter, selector="OPENTRAJECTORY_LLM_PROVIDER"
+        )
+        == normalize_protocol(registry_adapter)
+    )
+
+
+@pytest.mark.parametrize(
+    ("selector", "registry_adapter", "selected_name", "registry_name"),
+    [
+        ("anthropic_messages", "huiyan_chat_completions", ANTHROPIC, CHAT),
+        ("openai_responses", "huiyan_chat_completions", RESPONSES, CHAT),
+        ("openai_chat_completions", "anthropic_messages", CHAT, ANTHROPIC),
+    ],
+)
+def test_reconcile_rejects_selector_conflicting_with_registry_adapter(
+    selector: str, registry_adapter: str, selected_name: str, registry_name: str
+) -> None:
+    with pytest.raises(ProviderProtocolError) as raised:
+        reconcile_provider_protocol(
+            selector, registry_adapter, selector="OPENTRAJECTORY_LLM_PROVIDER"
+        )
+
+    message = str(raised.value)
+    assert "OPENTRAJECTORY_LLM_PROVIDER=" in message
+    assert selected_name in message
+    assert registry_name in message
+    assert registry_adapter in message
+
+
+def test_reconcile_uses_registry_adapter_without_a_selector() -> None:
+    assert (
+        reconcile_provider_protocol(
+            "", "anthropic_messages", selector="OPENTRAJECTORY_LLM_PROVIDER"
+        )
+        == ANTHROPIC
+    )
+
+
+def test_reconcile_honors_legacy_selector_when_registry_has_no_adapter() -> None:
+    assert (
+        reconcile_provider_protocol(
+            "openai_responses",
+            "",
+            selector="OPENTRAJECTORY_LLM_PROVIDER",
+            default_provider="huiyan_chat_completions",
+        )
+        == RESPONSES
+    )
+
+
+def test_reconcile_defaults_to_chat_completions_without_selector_or_adapter() -> None:
+    assert (
+        reconcile_provider_protocol(
+            "",
+            "",
+            selector="OPENTRAJECTORY_LLM_PROVIDER",
+            default_provider="huiyan_chat_completions",
+        )
+        == CHAT
+    )
+
+
+def test_reconcile_rejects_unknown_selector() -> None:
+    with pytest.raises(ProviderProtocolError, match="Unsupported provider protocol"):
+        reconcile_provider_protocol(
+            "openai_files", "", selector="OPENTRAJECTORY_LLM_PROVIDER"
+        )
