@@ -1,7 +1,7 @@
 # OpenAIR 单机生产部署与跳板暴露
 
 > 状态：已确认
-> 更新时间：2026-11-10
+> 更新时间：2026-11-11
 > 用途：把 OpenAIR 跑在高性能内网工作站上，通过一台低配公网跳板机以 HTTPS 域名对外提供服务。
 
 本文方案已在以下环境完成端到端验证：
@@ -11,6 +11,8 @@
 - 域名：`openair.example.com`，A 记录指向跳板机
 - 证书：Let's Encrypt ECC，acme.sh HTTP-01，nginx 终结 TLS
 - 隧道：SSH 反向转发，跳板机 `127.0.0.1:18080` 到工作站 `127.0.0.1:8080`
+
+版本门槛：`docker-compose.prod.yml` 使用 `!override` YAML 标签清空宿主机端口映射，要求 **Docker Compose v2.24.4+**。先用 `docker compose version` 确认；低于该版本会在解析覆盖层时直接报错。
 
 ## 1. 架构
 
@@ -27,39 +29,72 @@
 
 ## 2. 工作站准备
 
-使用包含必要修复的部署分支。当前 fork 的部署分支：
+从上游仓库克隆，`main` 即部署基准：
 
 ```bash
-git clone https://github.com/ouyangjiahong26/OpenAIR.git
+git clone https://github.com/pdl-openair/OpenAIR.git
 cd OpenAIR
-git switch deploy/openair-cislunarspace
 ```
 
-该分支相对上游 `main` 额外包含：
+### 2.1 前置依赖：MinIO 镜像（PR #4）
 
-- MinIO 镜像替换（官方社区镜像已删除）
-- planner 重试身份修复（live 模式自动修正不再被误判为重放）
-- 思考档位 `reasoning_effort` 支持
+上游 `main` 的 `docker-compose.yml` 中 `minio` 服务仍是 `minio/minio:latest`。该镜像已从 Docker Hub / quay.io 删除社区镜像并关闭匿名拉取，直接启动会在拉取阶段失败（`failed to resolve reference "docker.io/minio/minio:latest"`）。二选一：
 
-配置 `.env` 的关键项：
+- **推荐**：等 PR #4（MinIO 镜像替换为继续维护的 Silo 分支镜像）合入 `main` 后再 `git pull`，按本文步骤执行。
+- **临时替代（#4 未合入时）**：在工作站仓库根目录新建一个**不纳入版本控制**的覆盖文件 `docker-compose.minio-tmp.yml`：
+
+  ```yaml
+  services:
+    minio:
+      image: pgsty/silo:RELEASE.2026-10-26T00-00-00Z
+  ```
+
+  启动时把它追加到 compose 文件链末尾（见 §2.3）。**#4 合入后删除该文件并回到两文件命令**，不要把它提交进仓库。
+
+### 2.2 配置 `.env`
+
+```bash
+cp .env.example .env
+chmod 600 .env
+```
+
+关键项：
 
 ```dotenv
 OPENAIR_CORS_ORIGINS=https://openair.example.com
 OPENAIR_GITHUB_OAUTH_REDIRECT_URI=https://openair.example.com/api/auth/oauth/github/callback
 OPENAIR_OAUTH_SUCCESS_REDIRECT_URL=https://openair.example.com/auth/oauth/callback
+OPENAIR_BOOTSTRAP_ADMIN_EMAIL=admin@example.com
+OPENAIR_BOOTSTRAP_ADMIN_PASSWORD=用强密码替换
 ```
 
-四项必填密钥全部使用 `openssl rand` 生成的随机值：`POSTGRES_PASSWORD`、`OPENAIR_MINIO_ROOT_PASSWORD`、`OPENAIR_JWT_SECRET_KEY`、`OPENAIR_WORKER_AUTH_TOKEN`。管理员账号使用强密码。
+四项必填密钥（compose 用 `:?` 强制要求存在）全部使用 `openssl rand` 生成的随机值：`POSTGRES_PASSWORD`、`OPENAIR_MINIO_ROOT_PASSWORD`、`OPENAIR_JWT_SECRET_KEY`、`OPENAIR_WORKER_AUTH_TOKEN`。`OPENAIR_AUTH_REQUIRED=1` 下没有管理员账号无法登录，因此必须设置 `OPENAIR_BOOTSTRAP_ADMIN_EMAIL` / `OPENAIR_BOOTSTRAP_ADMIN_PASSWORD`（启动时创建或提权该账号，密码至少 8 位）。
 
-启动生产端口形态：
+### 2.3 构建 worker 镜像并启动
+
+`SKILL_EXEC_MODE=live` 时，api 与 durable-worker 通过 `OPENAIR_WORKER_IMAGE`（`openair-worker:latest`）拉起每个任务的执行容器。base compose 中 `worker` 是 `profiles: [build]` 的**纯构建目标**，`up -d --build` 不会构建它，必须先单独构建。两步都要求 `.env` 已按 §2.2 配置：compose 插值会强制校验那四个必填变量，缺一个都会直接报错。
 
 ```bash
+# 1) 构建 live 模式依赖的 worker 镜像（显式指定服务名，profile 服务也可被直接构建）
+docker compose build worker
+
+# 2) 启动生产端口形态（api / web / durable-worker 在此构建）
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
-`docker-compose.prod.yml` 会把 PostgreSQL、Redis、MinIO、API 的宿主机端口全部移除，只保留 `127.0.0.1:8080` 给反向隧道。
+若走了 §2.1 的临时替代，第 2 步改为把临时文件追加在末尾：
 
-本机自检：
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.minio-tmp.yml up -d --build
+```
+
+`docker-compose.prod.yml` 会把 PostgreSQL、Redis、MinIO、API 的宿主机端口全部移除，只保留 `127.0.0.1:8080` 给反向隧道（该文件需要 Compose v2.24.4+）。可用以下命令确认收敛结果：
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config | grep -A2 published
+```
+
+本机自检（web 容器同源反代 `/health` 到 `api:8000`）：
 
 ```bash
 curl -fsS http://127.0.0.1:8080/health
@@ -91,15 +126,16 @@ RestartSec=5
 WantedBy=default.target
 ```
 
-`jump` 是工作站的 SSH 别名。启动并设置开机自启：
+`jump` 是工作站的 SSH 别名。启动服务、开启 linger 并设置开机自启：
 
 ```bash
 systemctl --user daemon-reload
 systemctl --user enable --now openair-tunnel.service
+sudo loginctl enable-linger "$USER"
 loginctl show-user "$USER" -p Linger
 ```
 
-`Linger=yes` 保证工作站重启后用户级服务可以自启。跳板机上确认端口只监听 loopback：
+`Linger=yes` 保证工作站重启后无需登录也能拉起用户级服务；`show-user` 只用于确认，必须先用 `enable-linger` 打开。跳板机上确认端口只监听 loopback：
 
 ```bash
 ss -ltn | grep 18080
@@ -170,6 +206,8 @@ server {
 }
 ```
 
+证书路径按跳板机实际登录用户目录替换（上例用户名为 `ubuntu`，须与 `--install-cert` 写入的 `~/acme-openair/` 一致）。
+
 配置检查与重载：
 
 ```bash
@@ -190,7 +228,7 @@ curl -I https://openair.example.com/
 预期：
 
 - `/health` 返回 `"status":"ok"`
-- `/health/agent` 返回 `skillExecMode=live` 且模型为配置值
+- `/health/agent` 返回 `"skillExecMode":"live"`，且 `openairClaudeModel` 为配置的模型名
 - 首页返回 HTTP 200
 - `http://` 返回 301 到 HTTPS
 
@@ -212,7 +250,7 @@ curl -X POST https://openair.example.com/api/auth/login \
 - 数据卷：`pgdata`、`workspace_data`、`minio_data`、`redis_data`。至少 nightly 备份 PostgreSQL 与 MinIO 数据。
 - 证书由 acme.sh 自动续期，续期命令 reload nginx。
 - 隧道故障时公网返回 502；先查 `systemctl --user status openair-tunnel.service`，再查工作站 web 容器。
-- 更新平台时在工作站拉取部署分支后重新执行 compose 构建；不要在跳板机构建。
+- 更新平台时在工作站 `git pull` 上游 `main` 后重新执行 §2.3 的两步（`docker compose build worker`、再 `up -d --build`）；不要在跳板机构建。
 
 ## 7. 边界
 
