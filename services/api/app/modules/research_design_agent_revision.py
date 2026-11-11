@@ -304,16 +304,6 @@ def _json_object(content: str) -> Mapping[str, Any]:
     return parsed
 
 
-def _bounded_int_env(name: str, default: int, minimum: int, maximum: int) -> int:
-    raw = os.environ.get(name)
-    if raw:
-        try:
-            return max(minimum, min(int(raw), maximum))
-        except ValueError:
-            pass
-    return default
-
-
 def _bounded_float_env(name: str, default: float, minimum: float, maximum: float) -> float:
     raw = os.environ.get(name)
     if raw:
@@ -397,7 +387,7 @@ def _invoke_targeted_model_patch(instruction: str, latest_design: Any) -> tuple[
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": _agent_revision_temperature(),
-            "max_tokens": min(_agent_revision_max_tokens(), 2200),
+            "max_tokens": _agent_revision_max_tokens(),
         }
         if response_format is not None:
             payload["response_format"] = response_format
@@ -426,7 +416,7 @@ def _invoke_targeted_model_patch(instruction: str, latest_design: Any) -> tuple[
             user_prompt=user_prompt,
             output_schema=output_schema,
             schema_name="research_design_targeted_revision_v1",
-            max_completion_tokens=min(_agent_revision_max_tokens(), 2200),
+            max_completion_tokens=_agent_revision_max_tokens(),
             reasoning_effort=os.environ.get("OPENAIR_RESEARCH_START_PLANNER_REASONING_EFFORT") or None,
             temperature=_agent_revision_temperature(),
         )

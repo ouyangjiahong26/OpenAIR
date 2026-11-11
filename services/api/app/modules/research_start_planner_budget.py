@@ -30,7 +30,11 @@ def research_start_planner_max_tokens(
     before emitting the final JSON. A deployment that selects a high reasoning
     effort must therefore be able to raise the budget without a hidden platform
     ceiling; only a small floor protects against unusable zero-token requests.
-    Invalid values fall back to the stable capability default.
+
+    Missing, unparseable and non-positive values fall back to the stable
+    capability default (the same rule as the task-budget authority above). A
+    positive value below the usable floor is raised to that floor; every other
+    positive value is returned unchanged.
     """
 
     values = os.environ if environ is None else environ
