@@ -327,17 +327,39 @@ def _agent_revision_provider() -> str:
         or os.environ.get("OPENTRAJECTORY_LLM_PROVIDER")
         or ""
     ).strip().lower()
-    if override:
-        return override
     # Without an explicit selector the registry adapter is the protocol
     # authority, so credentials and wire shape cannot point at different
     # gateways.
+    registry_provider = ""
     try:
         from app.modules.provider_registry import resolve_model_binding
 
-        return resolve_model_binding("planner", validate=False).provider
+        registry_provider = resolve_model_binding("planner", validate=False).provider
     except (OSError, ValueError):
-        return "huiyan_chat_completions"
+        registry_provider = ""
+    if not override:
+        return registry_provider or "huiyan_chat_completions"
+    # An explicit selector must agree with the registry adapter that supplies
+    # the credentials; otherwise one protocol's body would carry another
+    # gateway's key. Checked on every request because ``validate=False``
+    # bindings skip the startup network check.
+    from app.execution.provider_protocol import (
+        ProviderProtocolError,
+        reconcile_provider_protocol,
+    )
+
+    try:
+        reconcile_provider_protocol(
+            override,
+            registry_provider,
+            selector="OPENAIR_RESEARCH_START_PLANNER_PROVIDER/OPENTRAJECTORY_LLM_PROVIDER",
+            default_provider="huiyan_chat_completions",
+        )
+    except ProviderProtocolError as exc:
+        raise ResearchDesignRevisionSaveUnavailable(
+            "本次研究方案修改服务暂不可用，请重试。"
+        ) from exc
+    return override
 
 
 def _agent_revision_chat_model() -> str:

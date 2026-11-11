@@ -36,8 +36,8 @@ from app.execution.provider_protocol import (
     build_protocol_chat_payload,
     extract_protocol_structured_text,
     extract_protocol_text,
-    normalize_protocol,
     protocol_finish_reason,
+    reconcile_provider_protocol,
 )
 
 # U-02: the pure content extractors now live in openai_compatible_client (to
@@ -769,13 +769,20 @@ def run_skill_with_llm(
     configured_provider = os.environ.get("OPENTRAJECTORY_LLM_PROVIDER", "").strip().lower()
     api_key, api_base, registry_adapter, registry_model = _resolve_structured_skill_transport()
     # The registry adapter is the protocol authority; the environment selector
-    # stays as an explicit per-deployment override (and is consistency-checked
-    # at startup by resolve_model_binding).
-    provider = configured_provider or registry_adapter or "huiyan_chat_completions"
+    # stays as an explicit per-deployment override. Both must name the same
+    # protocol, otherwise the selected wire shape would be sent with the
+    # registry gateway's key. Checked here (not only at startup) so the
+    # ``validate=False`` binding path cannot bypass it.
     try:
-        protocol = normalize_protocol(provider)
+        protocol = reconcile_provider_protocol(
+            configured_provider,
+            registry_adapter,
+            selector="OPENTRAJECTORY_LLM_PROVIDER",
+            default_provider="huiyan_chat_completions",
+        )
     except ProviderProtocolError as exc:
-        raise RuntimeError(f"Unsupported OPENTRAJECTORY_LLM_PROVIDER: {provider}") from exc
+        raise RuntimeError(str(exc)) from exc
+    provider = configured_provider or registry_adapter or "huiyan_chat_completions"
 
     skill_md_path = skill_dir / "SKILL.md"
     input_schema_path = skill_dir / "input.schema.json"

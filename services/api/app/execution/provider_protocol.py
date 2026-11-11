@@ -65,6 +65,39 @@ def normalize_protocol(provider: str) -> str:
         raise ProviderProtocolError(f"Unsupported provider protocol: {provider}") from exc
 
 
+def reconcile_provider_protocol(
+    configured_provider: str,
+    registry_adapter: str,
+    *,
+    selector: str,
+    default_provider: str = PROTOCOL_OPENAI_CHAT_COMPLETIONS,
+) -> str:
+    """Return the one protocol the explicit selector and the registry agree on.
+
+    The provider registry supplies the credentials, so the adapter it names is
+    the wire authority: an explicit selector (``OPENTRAJECTORY_LLM_PROVIDER``,
+    ``OPENAIR_RESEARCH_START_PLANNER_*_PROVIDER``) that names a different
+    protocol would send one protocol's body to another gateway's API key. The
+    selector is honored only when both agree; on the legacy fallback path
+    (``registry_adapter`` empty, registry supplied no credentials) it is the
+    sole authority. Adapter aliases compare as equal because they are
+    normalized to the same protocol.
+    """
+    registered = normalize_protocol(registry_adapter) if str(registry_adapter or "").strip() else ""
+    selected = str(configured_provider or "").strip().lower()
+    if not selected:
+        return registered or normalize_protocol(default_provider)
+    protocol = normalize_protocol(selected)
+    if registered and registered != protocol:
+        raise ProviderProtocolError(
+            f"{selector}={selected} selects the {protocol} protocol, but the provider "
+            f"registry adapter {registry_adapter} supplies {registered} credentials; "
+            "set the selector to the registry adapter (or change the adapter) so the "
+            "wire protocol and credentials match"
+        )
+    return protocol
+
+
 def protocol_endpoint(protocol: str, base_url: str) -> str:
     """Resolve the protocol-native endpoint for a provider base URL."""
     canonical = normalize_protocol(protocol)
@@ -114,6 +147,13 @@ def build_protocol_chat_payload(
         payload: dict[str, Any] = {"model": model, "input": turns, "store": False}
         if max_tokens is not None:
             payload["max_output_tokens"] = max_tokens
+        # ``reasoning_effort`` and ``temperature`` are mutually exclusive by
+        # intent, not by accident: the Responses API answers 400 when
+        # ``temperature`` accompanies ``reasoning.effort``, and a reasoning
+        # model ignores sampling controls anyway. A caller-supplied effort
+        # therefore wins and the temperature is dropped; callers must gate the
+        # effort on ``_is_reasoning_model`` so non-reasoning models keep
+        # taking the temperature path instead.
         if reasoning_effort is not None:
             payload["reasoning"] = {"effort": reasoning_effort}
         elif temperature is not None:
@@ -348,4 +388,5 @@ __all__ = [
     "protocol_headers",
     "protocol_response_format",
     "protocol_supports_stream",
+    "reconcile_provider_protocol",
 ]
