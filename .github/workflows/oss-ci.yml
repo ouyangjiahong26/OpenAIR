@@ -1,6 +1,11 @@
 # OpenAIR 公开仓轻量 CI：前端构建与全历史密钥扫描。
 # 完整 PR 门禁在 required-checks.yml；tag 发布在 release.yml。
 # action 全部按 commit SHA 固定，gitleaks 下载校验 SHA-256。
+#
+# 源头：私有仓 scripts/oss/overlays/oss-ci.yml。
+# 本文件已在公开仓手工加固（action SHA 固定、gitleaks 校验和），同一改动尚未回灌私有
+# overlay；在回灌完成前以公开仓版本为准，后续改动须两边同时落地，否则下次导出会冲突回退。
+# 同步方式与迁移说明见 docs/03_工程/待专项更新/CI_RELEASE.md 第 6 节。
 name: ci
 on:
   push:
