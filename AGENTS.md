@@ -12,7 +12,7 @@ OpenAIR：通用 AI 科研平台。用户用自然语言描述研究任务，平
 
 ## 本地环境要点
 
-- Windows + Git Bash；中文路径必须加引号。Linux 安装与本地开发见 [docs/03_工程/待专项更新/LINUX_INSTALLATION.md](docs/03_工程/待专项更新/LINUX_INSTALLATION.md)
+- Windows + Git Bash；中文路径必须加引号
 - 后端 Python venv 位于 services/api 下（.venv）；worktree 内无 venv 时用绝对路径调主仓解释器
 - `import llm_core` 在 API import 时必需（packages/llm_core 需安装）
 - 具体命令与新代码放置位见 [spec/workflows/development-workflow.md](spec/workflows/development-workflow.md)
