@@ -4,7 +4,7 @@ services:
   # ---------------------------------------------------------------------------
 
   minio:
-    image: minio/minio:latest
+    image: pgsty/silo:RELEASE.2026-10-26T00-00-00Z
     ports:
       - "${OPENAIR_MINIO_API_PORT:-9000}:9000"    # S3 API
       - "${OPENAIR_MINIO_CONSOLE_PORT:-9001}:9001"    # Console UI
