@@ -1,4 +1,5 @@
 # tag 触发的发布流水线：多架构镜像、CLI 包、校验和、Release Notes、干净 Ubuntu 冒烟。
+# 含 "-" 的 tag（如 v0.3.0-rc.1）按预发布处理：Release 标记 prerelease，镜像不写 latest。
 name: release
 
 on:
@@ -47,9 +48,6 @@ jobs:
             dockerfile: services/worker/Dockerfile
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Lowercase image namespace
-        shell: bash
-        run: echo "IMAGE_NAMESPACE=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
@@ -57,6 +55,24 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Resolve image tags
+        id: tags
+        shell: bash
+        env:
+          IMAGE: ${{ matrix.image }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          namespace="${GITHUB_REPOSITORY_OWNER,,}"
+          tags="ghcr.io/${namespace}/${IMAGE}:${REF_NAME}"
+          if [[ "$REF_NAME" != *-* ]]; then
+            tags+=$'\n'"ghcr.io/${namespace}/${IMAGE}:latest"
+          fi
+          {
+            echo "tags<<EOF"
+            printf '%s\n' "$tags"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -66,9 +82,7 @@ jobs:
           push: true
           provenance: true
           sbom: true
-          tags: |
-            ghcr.io/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ github.ref_name }}
-            ghcr.io/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
       - name: Record digest
         shell: bash
         env:
@@ -104,9 +118,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          prerelease=()
+          if [[ "$REF_NAME" == *-* ]]; then
+            prerelease=(--prerelease)
+          fi
           gh release create "$REF_NAME" \
             --title "$REF_NAME" \
             --generate-notes \
+            "${prerelease[@]}" \
             dist/* digests/* docker-compose.yml .env.example
 
   smoke:
