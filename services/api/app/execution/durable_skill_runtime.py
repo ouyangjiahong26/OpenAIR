@@ -2766,6 +2766,25 @@ def _structured_text_from_protocol_body(protocol: str, body: Mapping[str, Any]) 
         raise ValueError("provider structured content is invalid") from exc
 
 
+def _durable_reasoning_effort(
+    model: str, execution_policy: Mapping[str, Any] | None
+) -> str | None:
+    """Return the frozen reasoning effort, or ``None`` for non-reasoning models.
+
+    Mirrors the planner chain's ``_planner_reasoning_effort`` gate: only
+    reasoning models accept a reasoning budget, and every other model answers
+    4xx for ``reasoning``/``reasoning_effort``. Non-reasoning models therefore
+    keep the temperature path instead of receiving an effort.
+    """
+    if execution_policy is None:
+        return None
+    from app.execution.llm_structured_runner import _is_reasoning_model
+
+    if not _is_reasoning_model(model):
+        return None
+    return str(execution_policy["reasoningEffort"])
+
+
 def _execute_durable_huiyan_skill(
     request: dict[str, Any], skill: dict[str, Any], *, runtime: dict[str, Any]
 ) -> dict[str, Any]:
@@ -2985,9 +3004,7 @@ def _execute_durable_huiyan_skill(
         )
 
     protocol = normalize_protocol(runtime_config.adapter)
-    reasoning_effort = (
-        str(execution_policy["reasoningEffort"]) if execution_policy is not None else None
-    )
+    reasoning_effort = _durable_reasoning_effort(runtime_config.model, execution_policy)
     payload = build_protocol_chat_payload(
         protocol,
         model=runtime_config.model,
@@ -3008,6 +3025,7 @@ def _execute_durable_huiyan_skill(
         ],
         max_tokens=max_tokens,
         temperature=temperature,
+        # ``reasoning_effort`` is already gated to reasoning models.
         # Responses carries the effort as its native ``reasoning`` object;
         # chat-completions gateways take the historical top-level keyword.
         reasoning_effort=(
